@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- SEO Meta Tags -->
+  <title>DoubtHub — Discuss. Solve. Learn Together.</title>
+  <meta name="description"
+    content="DoubtHub is a modern futuristic collaborative platform for students and teams to post doubts, discuss solutions, and learn together in real-time.">
+  <meta name="keywords"
+    content="discussion platform, doubt solving, study groups, collaborative learning, student portal, coding doubts">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💬</text></svg>">
+
+  <!-- Google Fonts & Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+
+  <!-- ==========================================
+       BACKGROUND DYNAMIC ELEMENTS
+       ========================================== -->
+  <div class="bg-blobs" aria-hidden="true">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <!-- ==========================================
+       NAVIGATION BAR
+       ========================================== -->
+  <nav class="navbar" id="navbar" aria-label="Main Navigation">
+    <div class="container nav-container">
+      <a href="#home" class="logo-link" id="logo-nav">
+        <i data-lucide="help-circle" class="logo-icon" aria-hidden="true"></i>
+        <span class="logo-text">Doubt<span>Hub</span></span>
+      </a>
+
+      <button class="nav-toggle" id="nav-toggle-btn" aria-label="Toggle navigation menu" aria-expanded="false"
+        aria-controls="nav-menu-list">
+        <i data-lucide="menu" aria-hidden="true"></i>
+      </button>
+
+      <ul class="nav-menu" id="nav-menu-list" aria-hidden="true">
+        <li class="nav-item"><a href="#home">Home</a></li>
+        <li class="nav-item"><a href="#why-doubthub">Why DoubtHub</a></li>
+        <li class="nav-item"><a href="#features">Features</a></li>
+        <li class="nav-item"><a href="#how-it-works">How It Works</a></li>
+        <li class="nav-item"><a href="#future-scope">Future Scope</a></li>
+        <li class="nav-item"><a href="#contact">Contact</a></li>
+        <li class="nav-item">
+          <a href="auth.html" class="btn btn-primary nav-btn" id="login-nav-btn">Login</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ==========================================
+       HERO SECTION
+       ========================================== -->
+  <header class="hero" id="home">
+    <div class="container hero-grid">
+      <div class="hero-content reveal-fade-up">
+        <span class="section-tag" id="hero-welcome">Welcome to the Future</span>
+        <h1>Discuss. Solve. <br><span class="text-gradient-purple">Learn Together.</span></h1>
+        <p>A smart, collaborative, and futuristic group discussion platform where students and agile teams solve complex
+          technical and academic doubts in real time.</p>
+
+        <div class="hero-actions">
+          <a href="#features" class="btn btn-primary" id="btn-get-started">
+            Get Started
+            <i data-lucide="arrow-right" aria-hidden="true"></i>
+          </a>
+          <a href="#why-doubthub" class="btn btn-secondary" id="btn-learn-more">
+            Learn More
+          </a>
+        </div>
+
+        <div class="hero-stats">
+          <div class="stat-item">
+            <span class="stat-value" id="stat-discussions">100<span>+</span></span>
+            <span class="stat-label">Active Rooms</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value" id="stat-solved">500<span>+</span></span>
+            <span class="stat-label">Doubts Solved</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value" id="stat-members">300<span>+</span></span>
+            <span class="stat-label">Live Members</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-image-container reveal-fade-up" style="transition-delay: 0.1s;">
+        <div class="hero-image-wrapper">
+          <img src="assets/hero_discussion.png"
+            alt="Futuristic collaborative holographic discussion dashboard illustration" class="hero-image"
+            loading="eager" width="600" height="450">
+        </div>
+        <div class="hero-glow-element" aria-hidden="true"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==========================================
+       PROBLEM & SOLUTION SECTION
+       ========================================== -->
+  <section class="problem" id="why-doubthub">
+    <div class="container">
+      <div class="section-header reveal-fade-up">
+        <span class="section-tag" id="why-tag">The Challenge</span>
+        <h2>Why DoubtHub?</h2>
+        <p>Traditional communication methods scattered discussions and left critical doubts unresolved. We built a
+          unified hub centered around the doubt itself.</p>
+      </div>
+
+      <div class="problem-grid">
+        <!-- Traditional Card -->
+        <div class="glass-panel problem-card traditional reveal-fade-up" style="transition-delay: 0.1s;">
+          <h3 id="problem-title-traditional">
+            <i data-lucide="alert-triangle" aria-hidden="true"></i>
+            Traditional Chat Apps
+          </h3>
+          <ul class="problem-list">
+            <li>
+              <i data-lucide="x-circle" aria-hidden="true"></i>
+              <div>
+                <strong>Messages Get Lost</strong>
+                Doubts quickly get buried under casual conversations and text clutter.
+              </div>
+            </li>
+            <li>
+              <i data-lucide="x-circle" aria-hidden="true"></i>
+              <div>
+                <strong>Delayed & Unreliable Support</strong>
+                No structural prioritization; questions depend on random notification luck.
+              </div>
+            </li>
+            <li>
+              <i data-lucide="x-circle" aria-hidden="true"></i>
+              <div>
+                <strong>Scattered Solutions</strong>
+                Crucial answers are scattered across links, PDFs, and hundreds of chat history pages.
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- DoubtHub Card -->
+        <div class="glass-panel problem-card solution-hub reveal-fade-up" style="transition-delay: 0.2s;">
+          <h3 id="problem-title-solution">
+            <i data-lucide="check-circle-2" aria-hidden="true"></i>
+            The DoubtHub Solution
+          </h3>
+          <ul class="problem-list">
+            <li>
+              <i data-lucide="check-circle" aria-hidden="true"></i>
+              <div>
+                <strong>Structured Topic Rooms</strong>
+                Every doubt is structured into its own discussion thread that never gets lost.
+              </div>
+            </li>
+            <li>
+              <i data-lucide="check-circle" aria-hidden="true"></i>
+              <div>
+                <strong>AI & Real-Time Peer Collaboration</strong>
+                Instant help from peers combined with automated contextual suggestions.
+              </div>
+            </li>
+            <li>
+              <i data-lucide="check-circle" aria-hidden="true"></i>
+              <div>
+                <strong>Central Knowledge Base</strong>
+                Solved doubts are archived into a neat, searchable central directory for reuse.
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       FEATURES SECTION
+       ========================================== -->
+  <section class="features" id="features">
+    <div class="container">
+      <div class="section-header reveal-fade-up">
+        <span class="section-tag" id="features-tag">Capabilities</span>
+        <h2>Advanced Features</h2>
+        <p>Engineered with next-generation tools to make peer-to-peer learning structured, highly interactive, and
+          engaging.</p>
+      </div>
+
+      <div class="features-grid">
+
+        <!-- Card 1 -->
+        <div class="card-glow-wrapper reveal-fade-up">
+          <div class="glass-panel feature-card card-glow-inner" tabindex="0" id="feature-card-1">
+            <div class="feature-icon-wrapper">
+              <i data-lucide="help-circle" aria-hidden="true"></i>
+            </div>
+            <h3>Ask Doubts Instantly</h3>
+            <p>Post questions with code blocks, screenshots, mathematical formulae, and precise category tags in
+              seconds.</p>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="card-glow-wrapper reveal-fade-up" style="transition-delay: 0.1s;">
+          <div class="glass-panel feature-card card-glow-inner" tabindex="0" id="feature-card-2">
+            <div class="feature-icon-wrapper">
+              <i data-lucide="message-square" aria-hidden="true"></i>
+            </div>
+            <h3>Real-Time Discussion</h3>
+            <p>Engage in live collaborative threads equipped with real-time text syncing, code sandbox support, and rich
+              text editors.</p>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="card-glow-wrapper reveal-fade-up" style="transition-delay: 0.2s;">
+          <div class="glass-panel feature-card card-glow-inner" tabindex="0" id="feature-card-3">
+            <div class="feature-icon-wrapper">
+              <i data-lucide="bell" aria-hidden="true"></i>
+            </div>
+            <h3>Smart Notifications</h3>
+            <p>Get instant updates when a peer provides an explanation or asks for clarification on your doubts.</p>
+          </div>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="card-glow-wrapper reveal-fade-up">
+          <div class="glass-panel feature-card card-glow-inner" tabindex="0" id="feature-card-4">
+            <div class="feature-icon-wrapper">
+              <i data-lucide="users" aria-hidden="true"></i>
+            </div>
+            <h3>Team Collaboration</h3>
+            <p>Create private study spaces for your cohort, research lab, project team, or corporate department.</p>
+          </div>
+        </div>
+
+        <!-- Card 5 -->
+        <div class="card-glow-wrapper reveal-fade-up" style="transition-delay: 0.1s;">
+          <div class="glass-panel feature-card card-glow-inner" tabindex="0" id="feature-card-5">
+            <div class="feature-icon-wrapper">
+              <i data-lucide="hash" aria-hidden="true"></i>
+            </div>
+            <h3>Topic-Based Rooms</h3>
+            <p>Navigate through channelized boards separated by programming language, academic subject, or difficulty
+              level.</p>
+          </div>
+        </div>
+
+        <!-- Card 6 -->
+        <div class="card-glow-wrapper reveal-fade-up" style="transition-delay: 0.2s;">
+          <div class="glass-panel feature-card card-glow-inner" tabindex="0" id="feature-card-6">
+            <div class="feature-icon-wrapper">
+              <i data-lucide="sparkles" aria-hidden="true"></i>
+            </div>
+            <h3>AI Suggestions</h3>
+            <p>Receive instantaneous conceptual summaries and duplicate doubt suggestions powered by state-of-the-art
+              LLMs.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       HOW IT WORKS SECTION
+       ========================================== -->
+  <section class="how-it-works" id="how-it-works">
+    <div class="container">
+      <div class="section-header reveal-fade-up">
+        <span class="section-tag" id="flow-tag">Workflow</span>
+        <h2>How It Works</h2>
+        <p>A streamlined four-step path to solving doubts and building collaborative understanding.</p>
+      </div>
+
+      <div class="timeline">
+
+        <!-- Step 1 -->
+        <div class="timeline-step reveal-fade-up">
+          <div class="timeline-node" id="node-step-1">1</div>
+          <div class="glass-panel timeline-card" id="timeline-card-1">
+            <h3>Create or Join Group</h3>
+            <p>Establish a specialized channel with friends or join public rooms based on topics you are currently
+              exploring.</p>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="timeline-step reveal-fade-up" style="transition-delay: 0.1s;">
+          <div class="timeline-node" id="node-step-2">2</div>
+          <div class="glass-panel timeline-card" id="timeline-card-2">
+            <h3>Post a Doubt</h3>
+            <p>Input your query with screenshots, snippets, or voice notes. Tag appropriate subjects to alert target
+              subject experts.</p>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="timeline-step reveal-fade-up" style="transition-delay: 0.2s;">
+          <div class="timeline-node" id="node-step-3">3</div>
+          <div class="glass-panel timeline-card" id="timeline-card-3">
+            <h3>Members Discuss</h3>
+            <p>Collaborators jump into the real-time nested thread, working together via inline notes and dynamic
+              diagrams.</p>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="timeline-step reveal-fade-up" style="transition-delay: 0.3s;">
+          <div class="timeline-node" id="node-step-4">4</div>
+          <div class="glass-panel timeline-card" id="timeline-card-4">
+            <h3>Get the Solution</h3>
+            <p>Approve the best answer to lock in the solution. The thread is neatly catalogued for future study
+              reference.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       FUTURE SCOPE SECTION
+       ========================================== -->
+  <section class="future-scope" id="future-scope">
+    <div class="container">
+      <div class="section-header reveal-fade-up">
+        <span class="section-tag" id="future-tag">Roadmap</span>
+        <h2>Future Scope</h2>
+        <p>Our long-term architectural goal is to expand DoubtHub into a complete automated AI co-learning suite.</p>
+      </div>
+
+      <div class="future-scope-grid">
+
+        <!-- Future Item 1 -->
+        <div class="glass-panel scope-card reveal-fade-up" id="scope-card-1">
+          <span class="scope-badge">Phase 1</span>
+          <h3>
+            <i data-lucide="cpu" aria-hidden="true"></i>
+            AI Answers
+          </h3>
+          <p>Deploy custom-trained retrieval augmented models to automatically draft contextually verified starting
+            answers.</p>
+        </div>
+
+        <!-- Future Item 2 -->
+        <div class="glass-panel scope-card reveal-fade-up" style="transition-delay: 0.1s;" id="scope-card-2">
+          <span class="scope-badge">Phase 1</span>
+          <h3>
+            <i data-lucide="mic" aria-hidden="true"></i>
+            Voice Rooms
+          </h3>
+          <p>Integrate seamless spatial voice discussion huddles with real-time screen share canvas boards directly
+            inside discussion cards.</p>
+        </div>
+
+        <!-- Future Item 3 -->
+        <div class="glass-panel scope-card reveal-fade-up" style="transition-delay: 0.2s;" id="scope-card-3">
+          <span class="scope-badge">Phase 2</span>
+          <h3>
+            <i data-lucide="file-text" aria-hidden="true"></i>
+            File Syncing
+          </h3>
+          <p>Enable localized repository uploads, automatic workspace document linking, and full file permission
+            security protocols.</p>
+        </div>
+
+        <!-- Future Item 4 -->
+        <div class="glass-panel scope-card reveal-fade-up" id="scope-card-4">
+          <span class="scope-badge">Phase 2</span>
+          <h3>
+            <i data-lucide="bar-chart-3" aria-hidden="true"></i>
+            Analytics Panel
+          </h3>
+          <p>Comprehensive dashboard showing learning statistics, doubt-solving metrics, peer ratings, and trending
+            topics.</p>
+        </div>
+
+        <!-- Future Item 5 -->
+        <div class="glass-panel scope-card reveal-fade-up" style="transition-delay: 0.1s;" id="scope-card-5">
+          <span class="scope-badge">Phase 3</span>
+          <h3>
+            <i data-lucide="smartphone" aria-hidden="true"></i>
+            Mobile Suite
+          </h3>
+          <p>Custom native iOS and Android apps with smart background instant push notifications and photo-to-doubt
+            scanners.</p>
+        </div>
+
+        <!-- Future Item 6 -->
+        <div class="glass-panel scope-card reveal-fade-up" style="transition-delay: 0.2s;" id="scope-card-6">
+          <span class="scope-badge">Phase 3</span>
+          <h3>
+            <i data-lucide="search" aria-hidden="true"></i>
+            Semantic Search
+          </h3>
+          <p>Use vector embeddings to search through millions of past chats and diagrams based on semantic intent rather
+            than raw keywords.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       TESTIMONIALS SECTION
+       ========================================== -->
+  <section class="testimonials" id="testimonials">
+    <div class="container">
+      <div class="section-header reveal-fade-up">
+        <span class="section-tag" id="testimonials-tag">Testimonials</span>
+        <h2>Endorsed by Learners</h2>
+        <p>See how developers and university cohorts have transformed their cooperative study systems with DoubtHub.</p>
+      </div>
+
+      <div class="testimonials-grid">
+
+        <!-- Testimonial 1 -->
+        <div class="glass-panel testimonial-card reveal-fade-up" id="testimonial-card-1">
+          <p class="testimonial-text">DoubtHub completely resolved the chaos in our semester group projects. We no
+            longer lose important debugger questions in Slack channels. Having a dedicated glass board for each question
+            keeps us extremely organized!</p>
+          <div class="testimonial-user">
+            <div class="user-avatar-wrapper">
+              <img
+                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80"
+                alt="Sarah Jenkins" class="user-avatar" loading="lazy">
+            </div>
+            <div class="user-info">
+              <h4>Sarah Jenkins</h4>
+              <span class="user-role">Computer Science Undergrad</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Testimonial 2 -->
+        <div class="glass-panel testimonial-card reveal-fade-up" style="transition-delay: 0.1s;"
+          id="testimonial-card-2">
+          <p class="testimonial-text">During our 36-hour hackathon, DoubtHub was our secret weapon. Our five-person team
+            synced coding errors instantly, and got them debugged with peers in seconds. The UI is absolutely stunning
+            and super easy to use.</p>
+          <div class="testimonial-user">
+            <div class="user-avatar-wrapper">
+              <img
+                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80"
+                alt="Marcus Chen" class="user-avatar" loading="lazy">
+            </div>
+            <div class="user-info">
+              <h4>Marcus Chen</h4>
+              <span class="user-role">Full-Stack Hackathon Lead</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Testimonial 3 -->
+        <div class="glass-panel testimonial-card reveal-fade-up" style="transition-delay: 0.2s;"
+          id="testimonial-card-3">
+          <p class="testimonial-text">The ability to organize chat around specific doubts makes a massive difference.
+            Before, it was impossible to study past questions. DoubtHub archives every discussion into a beautiful
+            searchable directory.</p>
+          <div class="testimonial-user">
+            <div class="user-avatar-wrapper">
+              <img
+                src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=150&h=150&q=80"
+                alt="Alena Smirnova" class="user-avatar" loading="lazy">
+            </div>
+            <div class="user-info">
+              <h4>Alena Smirnova</h4>
+              <span class="user-role">Agile Team Lead</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       CALL TO ACTION SECTION
+       ========================================== -->
+  <section class="cta" id="contact">
+    <div class="container">
+      <div class="cta-panel reveal-fade-up">
+        <div class="cta-content">
+          <h2>Join the Future of <br><span class="text-gradient-purple">Collaborative Learning</span></h2>
+          <p>Start collaborating, solving complex doubts, and building structural knowledge with your peers in a
+            high-tech ecosystem. Setup is free, instantaneous, and forever.</p>
+          <a href="#home" class="btn btn-purple" id="btn-start-discussing">
+            Start Discussing
+            <i data-lucide="sparkles" aria-hidden="true"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       FOOTER
+       ========================================== -->
+  <footer class="footer" aria-label="Footer Navigation">
+    <div class="container">
+      <div class="footer-grid">
+
+        <div class="footer-brand">
+          <a href="#home" class="logo-link" id="logo-footer">
+            <i data-lucide="help-circle" class="logo-icon" aria-hidden="true"></i>
+            <span class="logo-text">Doubt<span>Hub</span></span>
+          </a>
+          <p class="footer-desc">A premium collaborative student hub engineered to solve academic, technical, and
+            industry doubts together in real time.</p>
+          <div class="footer-socials">
+            <a href="https://github.com" class="social-icon" aria-label="Github Profile" target="_blank"
+              rel="noopener noreferrer">
+              <i data-lucide="github" aria-hidden="true"></i>
+            </a>
+            <a href="https://twitter.com" class="social-icon" aria-label="Twitter Profile" target="_blank"
+              rel="noopener noreferrer">
+              <i data-lucide="twitter" aria-hidden="true"></i>
+            </a>
+            <a href="https://linkedin.com" class="social-icon" aria-label="Linkedin Profile" target="_blank"
+              rel="noopener noreferrer">
+              <i data-lucide="linkedin" aria-hidden="true"></i>
+            </a>
+            <a href="https://discord.com" class="social-icon" aria-label="Discord Server" target="_blank"
+              rel="noopener noreferrer">
+              <i data-lucide="message-square" aria-hidden="true"></i>
+            </a>
+          </div>
+        </div>
+
+        <div class="footer-column">
+          <h4>Navigation</h4>
+          <ul class="footer-links">
+            <li><a href="#home">Home</a></li>
+            <li><a href="#why-doubthub">Why DoubtHub</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#how-it-works">How It Works</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-column">
+          <h4>Platform</h4>
+          <ul class="footer-links">
+            <li><a href="#future-scope">Future Scope</a></li>
+            <li><a href="#testimonials">Testimonials</a></li>
+            <li><a href="#contact">Contact Support</a></li>
+            <li><a href="#faq" id="faq-link">FAQ</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-column">
+          <h4>Contact Us</h4>
+          <address>
+            <div class="footer-contact-item">
+              <i data-lucide="mail" aria-hidden="true"></i>
+              <span id="contact-email">support@doubthub.io</span>
+            </div>
+            <div class="footer-contact-item">
+              <i data-lucide="map-pin" aria-hidden="true"></i>
+              <span id="contact-address">Silicon Valley Innovation Hub, CA</span>
+            </div>
+            <div class="footer-contact-item">
+              <i data-lucide="phone" aria-hidden="true"></i>
+              <span id="contact-phone">+1 (800) 555-DBTH</span>
+            </div>
+          </address>
+        </div>
+
+      </div>
+
+      <div class="footer-bottom">
+        <p class="copyright">&copy; 2026 DoubtHub Inc. All rights reserved.</p>
+        <div class="footer-legal-links">
+          <a href="#privacy" id="privacy-link">Privacy Policy</a>
+          <a href="#terms" id="terms-link">Terms of Service</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bind animations and menu scripting -->
+  <script src="script.js"></script>
+  <script>
+    // Force Lucide icons to draw immediately after load
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
+  </script>
+</body>
+
+</html>

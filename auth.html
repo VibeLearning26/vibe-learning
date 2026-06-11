@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Authenticate - DoubtHub</title>
+  <meta name="description" content="Sign in or create your DoubtHub account.">
+
+  <script>
+    if (window.location.protocol === 'file:') {
+      window.location.replace(`http://localhost:8000/auth.html${window.location.hash || ''}`);
+    }
+  </script>
+
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>?</text></svg>">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./vendor/three/build/three.module.js",
+        "three/addons/": "./vendor/three/examples/jsm/"
+      }
+    }
+  </script>
+  <link rel="preload" href="assets/models/authentication_device.glb" as="fetch" type="model/gltf-binary" crossorigin fetchpriority="high">
+  <link rel="modulepreload" href="vendor/three/build/three.module.js">
+  <link rel="modulepreload" href="vendor/three/examples/jsm/loaders/GLTFLoader.js">
+  <link rel="stylesheet" href="style.css?v=42">
+
+  <script src="https://unpkg.com/lucide@latest" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="auth-galaxy.js?v=2" defer></script>
+  <script src="auth-device-loader.js?v=2" defer></script>
+  <script src="auth.js?v=20" defer></script>
+</head>
+<body class="auth-page auth-galaxy-page">
+  <canvas class="auth-galaxy-canvas" id="auth-galaxy-canvas" aria-hidden="true"></canvas>
+  <canvas class="auth-device-canvas" id="auth-device-canvas" aria-label="Interactive 3D authentication device"></canvas>
+  <div class="auth-galaxy-veil" aria-hidden="true"></div>
+
+
+
+  <main class="auth-galaxy-layout" id="auth-stage">
+
+
+    <section class="auth-gateway" id="auth-gateway" aria-labelledby="auth-title">
+      <div class="auth-glass-card" id="auth-glass-card">
+        <div class="auth-card-content">
+          <a href="index.html" class="auth-brand" id="auth-brand-link" aria-label="Go to DoubtHub home">
+            <i data-lucide="help-circle" class="auth-brand-icon" aria-hidden="true"></i>
+            <span class="auth-brand-text">Doubt<em>Hub</em></span>
+          </a>
+
+          <div class="auth-shield" id="auth-shield-icon" aria-hidden="true">
+            <div class="auth-shield-ring"></div>
+            <i data-lucide="shield-check"></i>
+          </div>
+
+          <h2 class="auth-title" id="auth-title">Sign In</h2>
+          <p class="auth-subtitle" id="auth-subtitle">Enter your credentials to continue</p>
+
+          <div class="auth-view auth-view-active" id="auth-email-view">
+            <div id="auth-signin-panel">
+              <form id="signin-form" novalidate>
+                <div class="auth-field">
+                  <label for="signin-email">Email Address</label>
+                  <input type="email" id="signin-email" class="auth-input" placeholder="you@example.com" required autocomplete="email">
+                </div>
+
+                <div class="auth-field">
+                  <label for="signin-password">Password</label>
+                  <div class="auth-input-wrap">
+                    <input type="password" id="signin-password" class="auth-input" placeholder="Enter password" required autocomplete="current-password">
+                    <button type="button" class="auth-eye-btn" aria-label="Toggle password visibility">
+                      <i data-lucide="eye" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                  <div class="auth-forgot-link-wrap">
+                    <span class="auth-forgot-link" id="go-to-forgot">Forgot Password?</span>
+                  </div>
+                </div>
+
+                <div id="signin-error" class="auth-msg auth-msg-error"></div>
+                <div id="signin-success" class="auth-msg auth-msg-success"></div>
+
+                <button type="submit" class="auth-submit-btn" id="signin-submit-btn">
+                  <i data-lucide="log-in" aria-hidden="true"></i>
+                  <span>Sign In</span>
+                </button>
+              </form>
+
+              <p class="auth-switch-text">
+                No account yet? <span class="auth-switch-link" id="go-to-signup">Create one</span>
+              </p>
+            </div>
+
+            <div id="auth-signup-panel" style="display:none">
+              <form id="signup-form" novalidate>
+                <div class="auth-field">
+                  <label for="signup-name">Full Name</label>
+                  <input type="text" id="signup-name" class="auth-input" placeholder="John Doe" required autocomplete="name">
+                </div>
+
+                <div class="auth-field">
+                  <label for="signup-email">Email Address</label>
+                  <input type="email" id="signup-email" class="auth-input" placeholder="you@example.com" required autocomplete="email">
+                </div>
+
+                <div class="auth-field">
+                  <label for="signup-password">Password</label>
+                  <div class="auth-input-wrap">
+                    <input type="password" id="signup-password" class="auth-input" placeholder="Minimum 6 characters" required minlength="6" autocomplete="new-password">
+                    <button type="button" class="auth-eye-btn" aria-label="Toggle password visibility">
+                      <i data-lucide="eye" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                  <span class="auth-field-hint">Minimum 6 characters</span>
+                </div>
+
+                <div id="signup-error" class="auth-msg auth-msg-error"></div>
+                <div id="signup-success" class="auth-msg auth-msg-success"></div>
+
+                <button type="submit" class="auth-submit-btn auth-submit-purple" id="signup-submit-btn">
+                  <i data-lucide="user-plus" aria-hidden="true"></i>
+                  <span>Create Account</span>
+                </button>
+              </form>
+
+              <p class="auth-switch-text">
+                Already have an account? <span class="auth-switch-link" id="go-to-signin">Sign in</span>
+              </p>
+            </div>
+
+            <div id="auth-forgot-panel" style="display:none">
+              <form id="forgot-form" novalidate>
+                <div class="auth-field">
+                  <label for="forgot-email">Email Address</label>
+                  <input type="email" id="forgot-email" class="auth-input" placeholder="you@example.com" required autocomplete="email">
+                </div>
+
+                <div id="forgot-error" class="auth-msg auth-msg-error"></div>
+                <div id="forgot-success" class="auth-msg auth-msg-success"></div>
+
+                <button type="submit" class="auth-submit-btn" id="forgot-submit-btn">
+                  <i data-lucide="mail" aria-hidden="true"></i>
+                  <span>Send Reset Link</span>
+                </button>
+              </form>
+
+              <p class="auth-switch-text">
+                Remember your password? <span class="auth-switch-link" id="go-to-signin-from-forgot">Sign in</span>
+              </p>
+            </div>
+          </div>
+
+          <div class="auth-trust" id="auth-trust-badge">
+            <div class="auth-trust-icon">
+              <i data-lucide="lock" aria-hidden="true"></i>
+            </div>
+            <span>Protected by encrypted auth</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
