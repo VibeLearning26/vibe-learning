@@ -2,15 +2,15 @@
   const canvas = document.getElementById('auth-galaxy-canvas');
   if (!canvas) return;
 
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { alpha: false });
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const palette = ['#20e7ff', '#6f7dff', '#b85cff', '#ff3fd8', '#ffd166'];
+  
   const state = {
     width: 0,
     height: 0,
     dpr: 1,
-    particles: [],
-    comets: [],
+    stars: [],
+    dust: [],
     mouseX: 0,
     mouseY: 0,
     lastTime: 0,
@@ -29,198 +29,296 @@
     canvas.style.width = `${state.width}px`;
     canvas.style.height = `${state.height}px`;
     ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
-    createParticles();
+    initParticles();
   }
 
-  function createParticles() {
-    const area = state.width * state.height;
-    const count = reduceMotion ? 260 : Math.min(1250, Math.max(560, Math.floor(area / 1350)));
-    state.particles = Array.from({ length: count }, (_, index) => {
-      const lane = Math.random();
-      const radius = Math.pow(Math.random(), 0.52) * 1.02;
-      return {
-        lane,
-        radius,
-        angle: random(0, Math.PI * 2),
-        speed: random(0.16, 0.52) * (1.35 - radius * 0.42),
-        size: random(0.75, 2.35) * (1.15 - radius * 0.22),
-        phase: random(0, Math.PI * 2),
-        color: palette[index % palette.length],
-        alpha: random(0.36, 0.95),
-      };
-    });
+  function initParticles() {
+    const starCount = Math.min(250, Math.floor((state.width * state.height) / 8000));
+    state.stars = Array.from({ length: starCount }, () => ({
+      x: random(0, state.width * 1.2),
+      y: random(0, state.height),
+      size: random(0.5, 1.5),
+      speed: random(0.1, 0.8),
+      alpha: random(0.2, 0.9),
+      phase: random(0, Math.PI * 2),
+      color: Math.random() > 0.5 ? '#ffffff' : '#ffe0cc',
+    }));
+
+    const dustCount = reduceMotion ? 50 : 150;
+    state.dust = Array.from({ length: dustCount }, () => ({
+      angle: random(0, Math.PI * 2),
+      orbitRadius: random(1.2, 3.8),
+      speed: random(0.0001, 0.0004),
+      size: random(0.8, 2.5),
+      alpha: random(0.1, 0.8),
+      phase: random(0, Math.PI * 2)
+    }));
   }
 
-  function getGalaxyFrame(time) {
+  function blackHoleFrame() {
     const mobile = state.width < 760;
-    const centerX = state.width * (mobile ? 0.58 : 0.78) + state.mouseX * 18;
-    const centerY = state.height * (mobile ? 0.38 : 0.52) + state.mouseY * 12;
-    const maxRadius = Math.min(state.width * (mobile ? 0.58 : 0.38), state.height * (mobile ? 0.44 : 0.55));
     return {
-      centerX,
-      centerY,
-      maxRadius,
-      squashX: mobile ? 1.1 : 1.22,
-      squashY: mobile ? 0.45 : 0.36,
-      tilt: mobile ? -0.18 : -0.34 + Math.sin(time * 0.00018) * 0.04,
-    };
-  }
-
-  function orbitPoint(particle, frame, time, offset = 0) {
-    const wave = Math.sin(time * 0.0012 + particle.phase) * 0.035;
-    const radius = (0.16 + particle.radius * 0.84 + wave) * frame.maxRadius;
-    const armTwist = particle.radius * 2.2 + Math.sin(particle.lane * 8.0) * 0.22;
-    const angle = particle.angle + armTwist + offset;
-    const x = Math.cos(angle) * radius * frame.squashX;
-    const y = Math.sin(angle) * radius * frame.squashY;
-    const cos = Math.cos(frame.tilt);
-    const sin = Math.sin(frame.tilt);
-    return {
-      x: frame.centerX + x * cos - y * sin,
-      y: frame.centerY + x * sin + y * cos,
+      x: state.width * (mobile ? 0.9 : 0.95), // Centered near right edge
+      y: state.height * 0.5,
+      radius: Math.max(state.width, state.height) * (mobile ? 0.35 : 0.32),
     };
   }
 
   function drawBackground() {
-    const gradient = ctx.createLinearGradient(0, 0, state.width, state.height);
-    gradient.addColorStop(0, '#08145a');
-    gradient.addColorStop(0.38, '#11106a');
-    gradient.addColorStop(0.68, '#1a0753');
-    gradient.addColorStop(1, '#04112c');
-    ctx.fillStyle = gradient;
+    ctx.fillStyle = '#010001';
     ctx.fillRect(0, 0, state.width, state.height);
   }
 
-  function drawGalaxyGlow(frame) {
-    const core = ctx.createRadialGradient(
-      frame.centerX,
-      frame.centerY,
-      0,
-      frame.centerX,
-      frame.centerY,
-      frame.maxRadius * 1.5
-    );
-    core.addColorStop(0, 'rgba(255, 78, 233, 0.36)');
-    core.addColorStop(0.28, 'rgba(94, 102, 255, 0.22)');
-    core.addColorStop(0.56, 'rgba(23, 216, 255, 0.13)');
-    core.addColorStop(1, 'rgba(3, 8, 28, 0)');
-    ctx.fillStyle = core;
-    ctx.fillRect(0, 0, state.width, state.height);
-  }
-
-  function drawOrbitBands(frame, time) {
-    const bands = [
-      { radius: 0.44, color: 'rgba(255, 65, 217, 0.74)', width: 10, blur: 24, phase: 0 },
-      { radius: 0.58, color: 'rgba(155, 84, 255, 0.62)', width: 12, blur: 28, phase: 1.1 },
-      { radius: 0.73, color: 'rgba(38, 230, 255, 0.66)', width: 13, blur: 32, phase: 2.2 },
-      { radius: 0.88, color: 'rgba(78, 110, 255, 0.44)', width: 9, blur: 24, phase: 3.1 },
-    ];
-
-    ctx.save();
-    ctx.translate(frame.centerX, frame.centerY);
-    ctx.rotate(frame.tilt);
-    ctx.scale(frame.squashX, frame.squashY);
-    ctx.globalCompositeOperation = 'lighter';
-
-    bands.forEach((band) => {
-      const pulse = 0.82 + Math.sin(time * 0.0016 + band.phase) * 0.18;
-      const radius = frame.maxRadius * band.radius;
-
-      ctx.shadowColor = band.color;
-      ctx.shadowBlur = band.blur;
-      ctx.strokeStyle = band.color;
-      ctx.globalAlpha = pulse;
-      ctx.lineWidth = band.width / frame.squashX;
-      ctx.beginPath();
-      ctx.ellipse(0, 0, radius, radius, 0, 0, Math.PI * 2);
-      ctx.stroke();
-
-      ctx.globalAlpha = pulse * 0.42;
-      ctx.lineWidth = (band.width * 2.4) / frame.squashX;
-      ctx.beginPath();
-      ctx.ellipse(0, 0, radius * 1.01, radius * 1.01, 0, 0, Math.PI * 2);
-      ctx.stroke();
-    });
-
-    ctx.restore();
-    ctx.globalAlpha = 1;
-  }
-
-  function drawComets(dt) {
-    if (!reduceMotion && Math.random() < 0.024 && state.comets.length < 9) {
-      state.comets.push({
-        x: random(state.width * 0.04, state.width * 0.94),
-        y: random(-80, state.height * 0.36),
-        vx: random(-0.18, 0.42),
-        vy: random(0.9, 1.75),
-        life: random(0.45, 0.95),
-        color: Math.random() > 0.5 ? '#28e8ff' : '#a06bff',
-      });
-    }
-
-    state.comets = state.comets.filter((comet) => {
-      comet.x += comet.vx * dt * 60;
-      comet.y += comet.vy * dt * 60;
-      comet.life -= dt * 0.32;
-      const alpha = Math.max(0, comet.life);
-      ctx.strokeStyle = comet.color;
-      ctx.globalAlpha = alpha * 0.48;
-      ctx.lineWidth = 1.3;
-      ctx.beginPath();
-      ctx.moveTo(comet.x, comet.y);
-      ctx.lineTo(comet.x - comet.vx * 80 - 34, comet.y - comet.vy * 80 - 46);
-      ctx.stroke();
-      return alpha > 0 && comet.y < state.height + 120;
-    });
-    ctx.globalAlpha = 1;
-  }
-
-  function drawParticles(time, dt) {
-    const frame = getGalaxyFrame(time);
-    drawGalaxyGlow(frame);
-    drawOrbitBands(frame, time);
-
+  function drawStarfield(frame, time, dt) {
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
-
-    state.particles.forEach((particle) => {
+    state.stars.forEach((star) => {
       if (!reduceMotion) {
-        const acceleration = 1 + (1 - particle.radius) * 1.25;
-        particle.angle += particle.speed * acceleration * dt;
+        star.x -= star.speed * dt * 15;
+        if (star.x < -20) {
+          star.x = state.width * 1.2 + 20;
+          star.y = random(0, state.height);
+        }
       }
 
-      const point = orbitPoint(particle, frame, time, 0);
-      const trail = orbitPoint(particle, frame, time, -0.015 - (1 - particle.radius) * 0.018);
-      const pulse = 0.72 + Math.sin(time * 0.003 + particle.phase) * 0.28;
-      const alpha = particle.alpha * pulse;
+      const dx = star.x - frame.x;
+      const dy = star.y - frame.y;
+      const distSq = dx * dx + dy * dy;
+      const dist = Math.sqrt(distSq);
+      
+      let drawX = star.x;
+      let drawY = star.y;
+      let alpha = star.alpha;
+      let stretchX = star.size;
+      let stretchY = star.size;
+      let rotation = 0;
 
-      ctx.strokeStyle = particle.color;
-      ctx.globalAlpha = alpha * 0.34;
-      ctx.lineWidth = Math.max(0.85, particle.size * 0.9);
+      // Realistic gravitational lensing (Einstein ring effect)
+      if (dist < frame.radius * 6.0) {
+        const lensFactor = (frame.radius * frame.radius) / (distSq + 1);
+        drawX += (dx / dist) * lensFactor * frame.radius * 1.0;
+        drawY += (dy / dist) * lensFactor * frame.radius * 1.0;
+        
+        // Stretch tangentially
+        stretchX = star.size * (1 + lensFactor * 4); 
+        stretchY = Math.max(0.1, star.size * (1 - lensFactor * 0.5));
+        rotation = Math.atan2(dy, dx) + Math.PI / 2;
+        
+        if (dist < frame.radius * 1.05) {
+            alpha *= Math.pow((dist - frame.radius) / (frame.radius * 0.05), 2);
+        }
+      }
+
+      const pulse = 0.7 + Math.sin(time * 0.002 + star.phase) * 0.3;
+      if (alpha * pulse > 0.01) {
+        ctx.fillStyle = star.color;
+        ctx.globalAlpha = Math.min(1, Math.max(0, alpha * pulse));
+        ctx.beginPath();
+        ctx.ellipse(drawX, drawY, stretchX, stretchY, rotation, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    });
+    ctx.restore();
+  }
+
+  function drawLensedRings(frame, time) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const pulse = 0.95 + Math.sin(time * 0.002) * 0.05;
+
+    // Ambient warm glow
+    const haloRadius = frame.radius * 2.8;
+    const haloGradient = ctx.createRadialGradient(
+      frame.x, frame.y, frame.radius,
+      frame.x, frame.y, haloRadius
+    );
+    haloGradient.addColorStop(0, `rgba(255, 120, 20, ${Math.min(1, 0.15 * pulse)})`);
+    haloGradient.addColorStop(0.3, `rgba(150, 30, 0, ${Math.min(1, 0.05 * pulse)})`);
+    haloGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = haloGradient;
+    ctx.beginPath();
+    ctx.arc(frame.x, frame.y, haloRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Einstein ring (lensed back of accretion disc)
+    // Replaced buggy shadowBlur with thick semi-transparent overlapping strokes for perfect smooth rendering
+    const rings = [
+      { r: frame.radius * 1.45, w: frame.radius * 0.4, c: 'rgba(255, 80, 10, 0.15)' },
+      { r: frame.radius * 1.45, w: frame.radius * 0.15, c: 'rgba(255, 100, 20, 0.3)' },
+      
+      { r: frame.radius * 1.32, w: frame.radius * 0.2, c: 'rgba(255, 150, 40, 0.3)' },
+      { r: frame.radius * 1.32, w: frame.radius * 0.1, c: 'rgba(255, 170, 60, 0.5)' },
+      
+      { r: frame.radius * 1.25, w: frame.radius * 0.1, c: 'rgba(255, 220, 120, 0.5)' },
+      { r: frame.radius * 1.25, w: frame.radius * 0.04, c: 'rgba(255, 230, 150, 0.8)' },
+      
+      { r: frame.radius * 1.2, w: frame.radius * 0.03, c: 'rgba(255, 255, 255, 0.7)' },
+      { r: frame.radius * 1.2, w: frame.radius * 0.015, c: 'rgba(255, 255, 255, 1.0)' },
+    ];
+
+    rings.forEach(ring => {
       ctx.beginPath();
-      ctx.moveTo(trail.x, trail.y);
-      ctx.lineTo(point.x, point.y);
+      ctx.arc(frame.x, frame.y, ring.r, 0, Math.PI * 2);
+      ctx.lineWidth = ring.w;
+      ctx.strokeStyle = ring.c;
       ctx.stroke();
+    });
+    ctx.restore();
+  }
 
-      ctx.fillStyle = particle.color;
-      ctx.globalAlpha = alpha;
+  function drawHorizontalDisc(frame, time) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    
+    ctx.translate(frame.x, frame.y);
+    const tilt = -0.06;
+    ctx.rotate(tilt);
+    ctx.scale(1, 0.12); // Extremely flat disk
+
+    const diskOuter = frame.radius * 3.8;
+    const orbit = time * 0.0004;
+
+    const ringCount = 28;
+    for (let i = 0; i < ringCount; i++) {
+      const progress = i / (ringCount - 1);
+      const rx = frame.radius * 1.15 + progress * (diskOuter - frame.radius * 1.15);
+      const ry = rx; 
+      
+      const alpha = Math.max(0.01, 0.7 - progress * 0.6) * (0.8 + Math.sin(orbit * 5 + i) * 0.2);
+
+      // CRITICAL FIX: Math.min(1, val) to prevent invalid rgba() strings that break strokes and cause glitches
+      const c1 = Math.min(1, alpha * 0.4);
+      const c2 = Math.min(1, alpha * 1.0);
+      const c3 = Math.min(1, alpha * 1.8);
+      const c4 = Math.min(1, alpha * 2.5);
+
+      const gradient = ctx.createLinearGradient(-rx, 0, rx, 0);
+      gradient.addColorStop(0, 'rgba(40, 10, 0, 0)');
+      gradient.addColorStop(0.15, `rgba(200, 40, 0, ${c1})`);
+      gradient.addColorStop(0.35, `rgba(255, 160, 40, ${c2})`);
+      gradient.addColorStop(0.48, `rgba(255, 240, 200, ${c3})`);
+      gradient.addColorStop(0.5, `rgba(255, 255, 255, ${c4})`); // Bright hot core
+      gradient.addColorStop(0.52, `rgba(255, 240, 200, ${c3})`);
+      gradient.addColorStop(0.65, `rgba(255, 160, 40, ${c2})`);
+      gradient.addColorStop(0.85, `rgba(200, 40, 0, ${c1})`);
+      gradient.addColorStop(1, 'rgba(40, 10, 0, 0)');
+
+      ctx.strokeStyle = gradient;
+      ctx.lineCap = 'round'; // Smooth ends
+      
+      // Draw thicker strokes to naturally overlap and create the glowing volume instead of using buggy shadowBlur
+      ctx.lineWidth = frame.radius * 0.03 + progress * frame.radius * 0.1;
       ctx.beginPath();
-      ctx.arc(point.x, point.y, particle.size, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI);
+      ctx.stroke();
+      
+      // Inner bloom
+      ctx.lineWidth = frame.radius * 0.01 + progress * frame.radius * 0.03;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function updatePhysics(dt) {
+    if (reduceMotion) return;
+    state.dust.forEach((d) => {
+      const velocity = 1 / Math.sqrt(Math.max(0.1, d.orbitRadius - 1));
+      d.angle += d.speed * dt * 1000 * velocity;
+      d.orbitRadius -= (0.00004 * dt * 1000) * velocity; 
+      if (d.orbitRadius < 1.15) {
+          d.orbitRadius = random(2.8, 3.8);
+          d.angle = random(0, Math.PI * 2);
+      }
+    });
+  }
+
+  function drawDustStreams(frame, time, isFront) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const tilt = -0.06;
+
+    state.dust.forEach((d) => {
+      const sinA = Math.sin(d.angle);
+      if (isFront && sinA < 0) return;
+      if (!isFront && sinA >= 0) return;
+
+      const r = frame.radius * d.orbitRadius;
+      const cosA = Math.cos(d.angle);
+      
+      let x = cosA * r;
+      let y = sinA * r * 0.12; 
+      
+      if (sinA < 0) {
+        const lensPower = Math.max(0, 1 - (d.orbitRadius - 1) * 0.35);
+        y -= Math.sin(-d.angle) * frame.radius * 0.55 * lensPower;
+      }
+
+      const rx = x * Math.cos(tilt) - y * Math.sin(tilt);
+      const ry = x * Math.sin(tilt) + y * Math.cos(tilt);
+      
+      const finalX = frame.x + rx;
+      const finalY = frame.y + ry;
+
+      const pulse = 0.5 + Math.sin(time * 0.004 + d.phase) * 0.5;
+      const finalAlpha = d.alpha * pulse;
+      if (finalAlpha <= 0.01) return;
+
+      const temp = Math.max(0, Math.min(1, (d.orbitRadius - 1.15) / 2.0));
+      const rColor = 255; 
+      const gColor = Math.floor(220 - temp * 120);
+      const bColor = Math.floor(200 - temp * 180);
+      
+      ctx.fillStyle = `rgba(${rColor}, ${gColor}, ${bColor}, ${Math.min(1, finalAlpha)})`;
+      
+      const trailLen = Math.max(1, 15 / d.orbitRadius);
+      ctx.beginPath();
+      ctx.ellipse(finalX, finalY, d.size * trailLen, d.size, d.angle + tilt + Math.PI/2, 0, Math.PI * 2);
       ctx.fill();
     });
+    ctx.restore();
+  }
 
+  function drawSingularity(frame) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-over';
+    
+    ctx.fillStyle = '#000000';
+    ctx.beginPath();
+    ctx.arc(frame.x, frame.y, frame.radius, 0, Math.PI * 2);
+    ctx.fill();
+    
+    const edgeGradient = ctx.createRadialGradient(
+      frame.x, frame.y, frame.radius * 0.98,
+      frame.x, frame.y, frame.radius * 1.02
+    );
+    edgeGradient.addColorStop(0, '#000000');
+    edgeGradient.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = edgeGradient;
+    ctx.beginPath();
+    ctx.arc(frame.x, frame.y, frame.radius * 1.05, 0, Math.PI * 2);
+    ctx.fill();
     ctx.restore();
   }
 
   function draw(time = 0) {
     const dt = Math.min(0.033, Math.max(0.001, (time - state.lastTime) / 1000 || 0.016));
     state.lastTime = time;
+    const frame = blackHoleFrame();
+
+    updatePhysics(dt);
 
     drawBackground();
-    const frame = getGalaxyFrame(time);
-    drawGalaxyGlow(frame);
-    drawComets(dt);
-    drawParticles(time, dt);
+    drawStarfield(frame, time, dt);
+    
+    drawLensedRings(frame, time);
+    drawDustStreams(frame, time, false);
+    
+    drawSingularity(frame);
+    
+    drawHorizontalDisc(frame, time);
+    drawDustStreams(frame, time, true);
 
     if (!reduceMotion) {
       window.requestAnimationFrame(draw);
@@ -229,8 +327,8 @@
 
   window.addEventListener('resize', resize, { passive: true });
   window.addEventListener('pointermove', (event) => {
-    state.mouseX = (event.clientX / state.width - 0.5) * 2;
-    state.mouseY = (event.clientY / state.height - 0.5) * 2;
+    state.mouseX = (event.clientX / Math.max(1, state.width) - 0.5) * 2;
+    state.mouseY = (event.clientY / Math.max(1, state.height) - 0.5) * 2;
   }, { passive: true });
 
   resize();

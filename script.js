@@ -10,7 +10,35 @@ document.addEventListener('DOMContentLoaded', () => {
   initScrollAnimations();
   initHolographicCardGlow();
   initSmoothScrollKeyboardFix();
+  initAuthListener();
 });
+
+function initAuthListener() {
+  const SUPABASE_URL = 'https://fgdmxuslojnbyzeaweyd.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_T0xMYGMk2MyqEeGw_3QPeg_jr2YfCJR';
+  const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+  
+  const loginBtn = document.getElementById('login-nav-btn');
+  if (!loginBtn || !supabase) return;
+
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (session) {
+      // User is logged in
+      loginBtn.textContent = 'Logout';
+      loginBtn.href = '#';
+      loginBtn.onclick = async (e) => {
+        e.preventDefault();
+        await supabase.auth.signOut();
+        window.location.reload();
+      };
+    } else {
+      // User is logged out
+      loginBtn.textContent = 'Login';
+      loginBtn.href = 'auth.html';
+      loginBtn.onclick = null;
+    }
+  });
+}
 
 /**
  * 1. Navbar Scroll Effect

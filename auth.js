@@ -188,6 +188,60 @@ function requireAuthService(errorEl) {
   return false;
 }
 
+function getSupabaseName(user) {
+  const metadata = user?.user_metadata || user?.app_metadata || {};
+  return metadata.full_name || metadata.name || metadata.display_name || '';
+}
+
+async function saveAuthProfile(user, fullName, email) {
+  if (!supabaseClient || !user?.id) return;
+
+  const { error } = await supabaseClient
+    .from('auth_profiles')
+    .upsert({
+      id: user.id,
+      full_name: fullName || getSupabaseName(user) || email.split('@')[0],
+      email,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'id' });
+
+  if (error) console.warn('Unable to save auth profile table row:', error.message);
+}
+
+async function loadAuthProfileName(user, email) {
+  const metadataName = getSupabaseName(user);
+  if (metadataName) return metadataName;
+  if (!supabaseClient || !user?.id) return '';
+
+  const { data, error } = await supabaseClient
+    .from('auth_profiles')
+    .select('full_name')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  if (error) {
+    console.warn('Unable to load auth profile table row:', error.message);
+    return '';
+  }
+  return data?.full_name || email.split('@')[0] || '';
+}
+
+function isEmailNotConfirmed(error) {
+  return /email not confirmed/i.test(error?.message || '');
+}
+
+async function resendConfirmationEmail(email) {
+  if (!supabaseClient || !email) return;
+  const { error } = await supabaseClient.auth.resend({
+    type: 'signup',
+    email,
+    options: {
+      emailRedirectTo: `${window.location.origin}/auth.html`,
+    },
+  });
+  if (error) console.warn('Unable to resend confirmation email:', error.message);
+}
+
 // ============================================
 // 6. Password Visibility Toggles
 // ============================================
@@ -238,17 +292,27 @@ signupForm.addEventListener('submit', async (e) => {
   setLoading(btn, true, 'Creating account...');
 
   try {
-    const { error } = await supabaseClient.auth.signUp({
+    const { data, error } = await supabaseClient.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: name }
+        emailRedirectTo: `${window.location.origin}/auth.html`,
+        data: {
+          full_name: name,
+          name,
+        }
       }
     });
 
     if (error) throw error;
+    await saveAuthProfile(data?.user, name, email);
 
-    showMsg(signupSuccess, 'Account created. Check your email for the verification link.');
+    showMsg(
+      signupSuccess,
+      data?.session
+        ? 'Account created. You can sign in now.'
+        : 'Account created. Check your email and confirm the link before signing in.'
+    );
     signupForm.reset();
   } catch (error) {
     showMsg(signupError, error.message);
@@ -273,17 +337,21 @@ signinForm.addEventListener('submit', async (e) => {
   setLoading(btn, true, 'Signing in...');
 
   try {
-    const { error } = await supabaseClient.auth.signInWithPassword({
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) {
-      if (error.message.includes('Email not confirmed')) {
-        throw new Error('Please verify your email first. Check your inbox.');
+      if (isEmailNotConfirmed(error)) {
+        await resendConfirmationEmail(email);
+        throw new Error('Email not confirmed. I sent the confirmation link again. Check your inbox.');
       }
       throw error;
     }
+
+    const profileName = await loadAuthProfileName(data?.user, email);
+    if (profileName) localStorage.setItem('doubthubUserName', profileName);
 
     showMsg(signinSuccess, 'Welcome back. Redirecting...');
     setTimeout(() => {

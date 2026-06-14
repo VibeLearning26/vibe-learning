@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- SEO Meta Tags -->
+  <title>Project Manager — DoubtHub</title>
+  <meta name="description"
+    content="DoubtHub Project Manager: Submit project ideas, get AI-powered task roadmaps, submit proof, and track your team's performance.">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📋</text></svg>">
+
+  <!-- Google Fonts & Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body class="pm-page">
+
+  <!-- ==========================================
+       BACKGROUND DYNAMIC ELEMENTS
+       ========================================== -->
+  <div class="bg-blobs" aria-hidden="true">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <!-- ==========================================
+       NAVIGATION BAR
+       ========================================== -->
+  <nav class="navbar" id="navbar" aria-label="Main Navigation">
+    <div class="container nav-container">
+      <a href="index.html" class="logo-link" id="logo-nav">
+        <i data-lucide="help-circle" class="logo-icon" aria-hidden="true"></i>
+        <span class="logo-text">Doubt<span>Hub</span></span>
+      </a>
+
+      <button class="nav-toggle" id="nav-toggle-btn" aria-label="Toggle navigation menu" aria-expanded="false"
+        aria-controls="nav-menu-list">
+        <i data-lucide="menu" aria-hidden="true"></i>
+      </button>
+
+      <ul class="nav-menu" id="nav-menu-list" aria-hidden="true">
+        <li class="nav-item"><a href="index.html">Home</a></li>
+        <li class="nav-item"><a href="index.html#features">Features</a></li>
+        <li class="nav-item"><a href="#pm-hero" class="nav-active">Project Manager</a></li>
+        <li class="nav-item">
+          <a href="auth.html" class="btn btn-primary nav-btn" id="login-nav-btn">Login</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ==========================================
+       HERO / INTRO SECTION
+       ========================================== -->
+  <header class="pm-hero" id="pm-hero">
+    <div class="container">
+      <div class="pm-hero-content reveal-fade-up">
+        <span class="section-tag" id="pm-hero-tag">
+          <i data-lucide="briefcase" aria-hidden="true" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"></i>
+          Project Manager
+        </span>
+        <h1>Plan. Track. <br><span class="text-gradient-purple">Deliver Results.</span></h1>
+        <p>Submit your project idea and our AI engine will break it into a role-specific roadmap with trackable milestones, proof submission, and performance scoring.</p>
+        <a href="#pm-submit-section" class="btn btn-primary" id="btn-start-project">
+          Start a Project
+          <i data-lucide="arrow-right" aria-hidden="true"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==========================================
+       PROJECT SUBMISSION FORM — CREATE OR JOIN
+       ========================================== -->
+  <section class="pm-submit-section" id="pm-submit-section">
+    <div class="container">
+      <div class="section-header reveal-fade-up">
+        <span class="section-tag" id="pm-submit-tag">Step 1</span>
+        <h2>Get Started</h2>
+        <p>Create a new project roadmap, or join an existing one shared by your teammate.</p>
+      </div>
+
+      <!-- Create / Join Toggle Tabs -->
+      <div class="pm-mode-tabs reveal-fade-up" id="pm-mode-tabs">
+        <button class="pm-mode-tab active" data-mode="create" id="pm-tab-create">
+          <i data-lucide="plus-circle" aria-hidden="true"></i>
+          <span>Create New Roadmap</span>
+          <small>Use AI to divide your project into tasks</small>
+        </button>
+        <button class="pm-mode-tab" data-mode="join" id="pm-tab-join">
+          <i data-lucide="log-in" aria-hidden="true"></i>
+          <span>Join Existing Roadmap</span>
+          <small>Enter a Project Code from your teammate</small>
+        </button>
+      </div>
+
+      <!-- ====== CREATE MODE FORM ====== -->
+      <div class="pm-form-card glass-panel reveal-fade-up" id="pm-create-form-card">
+        <div class="pm-form-header">
+          <i data-lucide="sparkles" aria-hidden="true"></i>
+          <div>
+            <h3>Create Project Roadmap</h3>
+            <p>You are the first person in your role to set up the roadmap. Your teammates can join using the Project Code generated after creation.</p>
+          </div>
+        </div>
+
+        <form id="pm-project-form" novalidate>
+
+          <!-- Project Name -->
+          <div class="pm-field">
+            <label for="pm-project-name">
+              <i data-lucide="folder-open" aria-hidden="true"></i>
+              Project / Task Name
+            </label>
+            <input type="text" id="pm-project-name" class="pm-input" placeholder="e.g., Build DoubtHub Landing Page" required>
+          </div>
+
+          <!-- Role Selection -->
+          <div class="pm-field">
+            <label for="pm-role-select">
+              <i data-lucide="user-check" aria-hidden="true"></i>
+              Your Role
+            </label>
+            <div class="pm-select-wrapper">
+              <select id="pm-role-select" class="pm-input pm-select" required>
+                <option value="" disabled selected>Select your role...</option>
+                <option value="project-builder">🏗️ Project Builder (2-3 members)</option>
+                <option value="meeting-arrangement">📅 Meeting Arrangement Team (2-3 members)</option>
+                <option value="social-media-wing">📱 Social Media Wing (2-3 members)</option>
+              </select>
+              <i data-lucide="chevron-down" class="pm-select-icon" aria-hidden="true"></i>
+            </div>
+          </div>
+
+          <!-- Your Name -->
+          <div class="pm-field">
+            <label for="pm-creator-name">
+              <i data-lucide="user" aria-hidden="true"></i>
+              Your Name
+            </label>
+            <input type="text" id="pm-creator-name" class="pm-input" placeholder="e.g., Abhin" required>
+          </div>
+
+          <!-- Project Idea / Description -->
+          <div class="pm-field">
+            <label for="pm-project-idea">
+              <i data-lucide="lightbulb" aria-hidden="true"></i>
+              Project Idea / Task Description
+            </label>
+            <textarea id="pm-project-idea" class="pm-input pm-textarea" rows="4"
+              placeholder="Describe your project idea in detail... e.g., Create a responsive portfolio website with dark theme, contact form, and project showcase section."
+              required></textarea>
+          </div>
+
+          <!-- Extra Description (Optional) -->
+          <div class="pm-field">
+            <label for="pm-extra-description">
+              <i data-lucide="file-text" aria-hidden="true"></i>
+              Additional Details <span class="pm-optional">(Optional)</span>
+            </label>
+            <textarea id="pm-extra-description" class="pm-input pm-textarea" rows="3"
+              placeholder="Add any extra notes, requirements, reference links, or special instructions..."></textarea>
+          </div>
+
+          <!-- Reference Resources -->
+          <div class="pm-field">
+            <label for="pm-resources">
+              <i data-lucide="book-open" aria-hidden="true"></i>
+              Reference Books / Resources <span class="pm-optional">(Optional)</span>
+            </label>
+            <input type="text" id="pm-resources" class="pm-input"
+              placeholder="e.g., MDN Docs, Clean Code by Robert Martin">
+          </div>
+
+          <!-- Error / Success Messages -->
+          <div id="pm-form-error" class="pm-msg pm-msg-error" style="display:none;"></div>
+          <div id="pm-form-success" class="pm-msg pm-msg-success" style="display:none;"></div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="btn btn-purple pm-submit-btn" id="pm-analyze-btn">
+            <i data-lucide="sparkles" aria-hidden="true"></i>
+            <span>Analyze & Divide Project</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- ====== JOIN MODE FORM ====== -->
+      <div class="pm-form-card glass-panel reveal-fade-up" id="pm-join-form-card" style="display:none;">
+        <div class="pm-form-header">
+          <i data-lucide="users" aria-hidden="true"></i>
+          <div>
+            <h3>Join Your Teammate's Roadmap</h3>
+            <p>Your teammate has already created the roadmap for your role. Enter the Project Code they shared with you to access the same tasks and start submitting proof.</p>
+          </div>
+        </div>
+
+        <form id="pm-join-form" novalidate>
+
+          <!-- Project Code -->
+          <div class="pm-field">
+            <label for="pm-join-code">
+              <i data-lucide="key" aria-hidden="true"></i>
+              Project Code
+            </label>
+            <input type="text" id="pm-join-code" class="pm-input pm-code-input" placeholder="e.g., DH-A3X7K9"
+              required style="text-transform: uppercase; letter-spacing: 0.15em; font-family: var(--font-heading); font-size: 1.2rem; text-align: center;">
+          </div>
+
+          <!-- Your Name -->
+          <div class="pm-field">
+            <label for="pm-join-name">
+              <i data-lucide="user" aria-hidden="true"></i>
+              Your Name
+            </label>
+            <input type="text" id="pm-join-name" class="pm-input" placeholder="e.g., Rahul" required>
+          </div>
+
+          <!-- Error / Success Messages -->
+          <div id="pm-join-error" class="pm-msg pm-msg-error" style="display:none;"></div>
+          <div id="pm-join-success" class="pm-msg pm-msg-success" style="display:none;"></div>
+
+          <!-- Join Button -->
+          <button type="submit" class="btn btn-primary pm-submit-btn" id="pm-join-btn">
+            <i data-lucide="log-in" aria-hidden="true"></i>
+            <span>Join Roadmap</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- ====== SHARE CODE DISPLAY (after creation) ====== -->
+      <div class="pm-share-card glass-panel" id="pm-share-card" style="display:none;">
+        <div class="pm-share-header">
+          <div class="pm-share-icon-wrapper">
+            <i data-lucide="share-2" aria-hidden="true"></i>
+          </div>
+          <h3>Share This Code With Your Teammates!</h3>
+          <p>Your teammates in the same role can join this roadmap by entering this code.</p>
+        </div>
+        <div class="pm-share-code-box" id="pm-share-code-box">
+          <span id="pm-share-code-value">DH-XXXXXX</span>
+          <button class="pm-copy-btn" id="pm-copy-code-btn" title="Copy code">
+            <i data-lucide="copy" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="pm-share-copied" id="pm-share-copied" style="display:none;">
+          <i data-lucide="check" aria-hidden="true"></i> Copied to clipboard!
+        </div>
+        <button class="btn btn-primary pm-submit-btn" id="pm-continue-roadmap-btn" style="margin-top:1.5rem;">
+          <i data-lucide="arrow-right" aria-hidden="true"></i>
+          <span>Continue to Roadmap</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       AI LOADING / ANALYSIS ANIMATION
+       ========================================== -->
+  <section class="pm-loading-section" id="pm-loading-section" style="display:none;">
+    <div class="container">
+      <div class="pm-loading-card glass-panel">
+        <div class="pm-loading-animation">
+          <div class="pm-loading-ring">
+            <div class="pm-ring-segment"></div>
+            <div class="pm-ring-segment"></div>
+            <div class="pm-ring-segment"></div>
+          </div>
+          <i data-lucide="brain" class="pm-loading-brain-icon" aria-hidden="true"></i>
+        </div>
+        <h3 id="pm-loading-title">Analyzing Your Project...</h3>
+        <p id="pm-loading-subtitle" class="pm-loading-text">Our AI is breaking down your idea into manageable tasks</p>
+        <div class="pm-loading-steps">
+          <div class="pm-load-step" id="pm-load-step-1">
+            <i data-lucide="search" aria-hidden="true"></i>
+            <span>Understanding project scope</span>
+          </div>
+          <div class="pm-load-step" id="pm-load-step-2">
+            <i data-lucide="git-branch" aria-hidden="true"></i>
+            <span>Dividing into phases</span>
+          </div>
+          <div class="pm-load-step" id="pm-load-step-3">
+            <i data-lucide="calendar" aria-hidden="true"></i>
+            <span>Generating roadmap</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       ROADMAP / TASK TIMELINE
+       ========================================== -->
+  <section class="pm-roadmap-section" id="pm-roadmap-section" style="display:none;">
+    <div class="container">
+      <div class="section-header reveal-fade-up">
+        <span class="section-tag" id="pm-roadmap-tag">Step 2</span>
+        <h2>Your Project Roadmap</h2>
+        <p id="pm-roadmap-subtitle">Follow this roadmap to complete your project successfully.</p>
+      </div>
+
+      <!-- Project Info Header -->
+      <div class="pm-project-info glass-panel reveal-fade-up" id="pm-project-info">
+        <div class="pm-info-row">
+          <div class="pm-info-item">
+            <i data-lucide="folder" aria-hidden="true"></i>
+            <div>
+              <span class="pm-info-label">Project</span>
+              <span class="pm-info-value" id="pm-info-project-name">—</span>
+            </div>
+          </div>
+          <div class="pm-info-item">
+            <i data-lucide="user" aria-hidden="true"></i>
+            <div>
+              <span class="pm-info-label">Role</span>
+              <span class="pm-info-value" id="pm-info-role">—</span>
+            </div>
+          </div>
+          <div class="pm-info-item">
+            <i data-lucide="layers" aria-hidden="true"></i>
+            <div>
+              <span class="pm-info-label">Total Tasks</span>
+              <span class="pm-info-value" id="pm-info-total-tasks">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Roadmap Timeline Container (Populated by JS) -->
+      <div class="pm-timeline" id="pm-timeline">
+        <!-- Task cards injected here by project-manager.js -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       PROGRESS DASHBOARD
+       ========================================== -->
+  <section class="pm-dashboard-section" id="pm-dashboard-section" style="display:none;">
+    <div class="container">
+      <div class="section-header reveal-fade-up">
+        <span class="section-tag" id="pm-dashboard-tag">Progress</span>
+        <h2>Performance Dashboard</h2>
+        <p>Track your overall project completion and performance metrics.</p>
+      </div>
+
+      <div class="pm-dashboard-grid reveal-fade-up">
+        <!-- Progress Ring -->
+        <div class="pm-dash-card glass-panel pm-progress-ring-card" id="pm-progress-card">
+          <div class="pm-progress-ring-wrapper">
+            <svg class="pm-progress-ring" viewBox="0 0 120 120" id="pm-progress-svg">
+              <circle class="pm-ring-bg" cx="60" cy="60" r="52" />
+              <circle class="pm-ring-fill" cx="60" cy="60" r="52" id="pm-ring-fill" />
+            </svg>
+            <span class="pm-progress-percent" id="pm-progress-percent">0%</span>
+          </div>
+          <h3>Overall Progress</h3>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="pm-dash-card glass-panel" id="pm-stat-completed">
+          <div class="pm-dash-icon pm-dash-icon-blue">
+            <i data-lucide="check-circle" aria-hidden="true"></i>
+          </div>
+          <div class="pm-dash-stat">
+            <span class="pm-dash-value" id="pm-dash-completed-value">0</span>
+            <span class="pm-dash-label">Tasks Completed</span>
+          </div>
+        </div>
+
+        <div class="pm-dash-card glass-panel" id="pm-stat-pending">
+          <div class="pm-dash-icon pm-dash-icon-purple">
+            <i data-lucide="clock" aria-hidden="true"></i>
+          </div>
+          <div class="pm-dash-stat">
+            <span class="pm-dash-value" id="pm-dash-pending-value">0</span>
+            <span class="pm-dash-label">Tasks Pending</span>
+          </div>
+        </div>
+
+        <div class="pm-dash-card glass-panel" id="pm-stat-points">
+          <div class="pm-dash-icon pm-dash-icon-green">
+            <i data-lucide="trophy" aria-hidden="true"></i>
+          </div>
+          <div class="pm-dash-stat">
+            <span class="pm-dash-value" id="pm-dash-points-value">0</span>
+            <span class="pm-dash-label">Points Earned</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SAVED PROJECTS LIST
+       ========================================== -->
+  <section class="pm-projects-section" id="pm-projects-section">
+    <div class="container">
+      <div class="section-header reveal-fade-up">
+        <span class="section-tag" id="pm-projects-tag">My Projects</span>
+        <h2>Saved Projects</h2>
+        <p>Resume working on your existing projects or start a new one.</p>
+      </div>
+
+      <div class="pm-projects-list" id="pm-projects-list">
+        <!-- Populated by JS -->
+        <div class="pm-empty-state glass-panel" id="pm-empty-state">
+          <i data-lucide="inbox" aria-hidden="true"></i>
+          <h3>No Projects Yet</h3>
+          <p>Submit your first project idea above to get started!</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       PROOF SUBMISSION MODAL
+       ========================================== -->
+  <div class="pm-modal-overlay" id="pm-proof-modal" style="display:none;" role="dialog" aria-modal="true"
+    aria-labelledby="pm-modal-title">
+    <div class="pm-modal glass-panel">
+      <button class="pm-modal-close" id="pm-modal-close" aria-label="Close modal">
+        <i data-lucide="x" aria-hidden="true"></i>
+      </button>
+
+      <h3 id="pm-modal-title">Submit Proof</h3>
+      <p class="pm-modal-subtitle" id="pm-modal-task-name">Task: —</p>
+
+      <!-- Proof Type Selector -->
+      <div class="pm-proof-tabs" id="pm-proof-tabs">
+        <button class="pm-proof-tab active" data-type="image" id="pm-tab-image">
+          <i data-lucide="image" aria-hidden="true"></i> Image
+        </button>
+        <button class="pm-proof-tab" data-type="url" id="pm-tab-url">
+          <i data-lucide="link" aria-hidden="true"></i> URL / Link
+        </button>
+        <button class="pm-proof-tab" data-type="document" id="pm-tab-document">
+          <i data-lucide="file-text" aria-hidden="true"></i> Document
+        </button>
+      </div>
+
+      <!-- Image Upload Zone -->
+      <div class="pm-proof-content" id="pm-proof-image-zone">
+        <div class="pm-drop-zone" id="pm-drop-zone">
+          <i data-lucide="upload-cloud" aria-hidden="true"></i>
+          <p>Drag & drop an image here</p>
+          <span>or click to browse</span>
+          <input type="file" id="pm-file-input" accept="image/*,.pdf,.doc,.docx" hidden>
+        </div>
+        <div class="pm-preview" id="pm-image-preview" style="display:none;">
+          <img id="pm-preview-img" alt="Proof preview">
+          <button class="pm-preview-remove" id="pm-remove-preview">
+            <i data-lucide="trash-2" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- URL Input Zone -->
+      <div class="pm-proof-content" id="pm-proof-url-zone" style="display:none;">
+        <div class="pm-field">
+          <label for="pm-proof-url-input">
+            <i data-lucide="globe" aria-hidden="true"></i>
+            Proof URL
+          </label>
+          <input type="url" id="pm-proof-url-input" class="pm-input" placeholder="https://example.com/my-proof">
+        </div>
+      </div>
+
+      <!-- Document Upload Zone -->
+      <div class="pm-proof-content" id="pm-proof-doc-zone" style="display:none;">
+        <div class="pm-drop-zone" id="pm-doc-drop-zone">
+          <i data-lucide="file-plus" aria-hidden="true"></i>
+          <p>Drag & drop a document here</p>
+          <span>PDF, DOC, DOCX accepted</span>
+          <input type="file" id="pm-doc-file-input" accept=".pdf,.doc,.docx" hidden>
+        </div>
+        <div class="pm-doc-preview" id="pm-doc-preview" style="display:none;">
+          <i data-lucide="file-check" aria-hidden="true"></i>
+          <span id="pm-doc-name">document.pdf</span>
+          <button class="pm-preview-remove" id="pm-remove-doc-preview">
+            <i data-lucide="trash-2" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Optional Notes -->
+      <div class="pm-field" style="margin-top:1rem;">
+        <label for="pm-proof-notes">
+          <i data-lucide="message-square" aria-hidden="true"></i>
+          Notes <span class="pm-optional">(Optional)</span>
+        </label>
+        <textarea id="pm-proof-notes" class="pm-input pm-textarea" rows="2"
+          placeholder="Add any notes about this submission..."></textarea>
+      </div>
+
+      <!-- Modal Error/Success -->
+      <div id="pm-modal-error" class="pm-msg pm-msg-error" style="display:none;"></div>
+      <div id="pm-modal-success" class="pm-msg pm-msg-success" style="display:none;"></div>
+
+      <!-- Submit Proof Button -->
+      <button class="btn btn-primary pm-submit-btn" id="pm-submit-proof-btn">
+        <i data-lucide="check" aria-hidden="true"></i>
+        <span>Submit Proof</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       SCRIPTS
+       ========================================== -->
+  <script src="project-manager.js"></script>
+  <script>
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
+  </script>
+
+</body>
+
+</html>

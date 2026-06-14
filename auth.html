@@ -25,11 +25,11 @@
   <link rel="preload" href="assets/models/authentication_device.glb" as="fetch" type="model/gltf-binary" crossorigin fetchpriority="high">
   <link rel="modulepreload" href="vendor/three/build/three.module.js">
   <link rel="modulepreload" href="vendor/three/examples/jsm/loaders/GLTFLoader.js">
-  <link rel="stylesheet" href="style.css?v=42">
+  <link rel="stylesheet" href="style.css?v=50">
 
   <script src="https://unpkg.com/lucide@latest" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-  <script src="auth-galaxy.js?v=2" defer></script>
+  <script src="auth-galaxy.js?v=15" defer></script>
   <script src="auth-device-loader.js?v=2" defer></script>
   <script src="auth.js?v=20" defer></script>
 </head>
@@ -42,6 +42,14 @@
 
   <main class="auth-galaxy-layout" id="auth-stage">
 
+    <section class="auth-hero-copy auth-blackhole-copy" aria-labelledby="auth-hero-title">
+      <p class="auth-hero-kicker">Identity enters the event horizon</p>
+      <h1 id="auth-hero-title">Authenticate through the singularity</h1>
+      <p class="auth-hero-text">Move through each face of the device and let DoubtHub verify your access with a cinematic, guided flow.</p>
+      <div class="auth-hero-actions" aria-label="Authentication highlights">
+        <button type="button" class="auth-hero-btn auth-hero-btn-primary" id="auth-hero-login">Secure login</button>
+      </div>
+    </section>
 
     <section class="auth-gateway" id="auth-gateway" aria-labelledby="auth-title">
       <div class="auth-glass-card" id="auth-glass-card">
