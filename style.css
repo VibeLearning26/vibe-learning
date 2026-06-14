@@ -5882,38 +5882,7 @@ body.auth-galaxy-page .auth-trust span {
     font-size: 2rem !important;
   }
 
-  .auth-galaxy-layout {
-    flex-direction: column !important;
-    align-items: center !important;
-    padding: 6rem 1rem 2rem 1rem !important;
-    gap: 2rem !important;
-  }
 
-  .auth-hero-copy {
-    text-align: center !important;
-    align-items: center !important;
-    max-width: 100% !important;
-  }
-
-  .auth-gateway {
-    width: 100% !important;
-    max-width: 400px !important;
-    margin: 0 auto !important;
-    position: relative !important;
-    z-index: 10 !important;
-  }
-
-  /* Make sure 3D canvas scales properly on mobile */
-  .auth-device-canvas {
-    width: 100% !important;
-    height: 40vh !important;
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    transform: none !important;
-    margin-top: 1rem !important;
-  }
-  
   .auth-galaxy-canvas {
     position: fixed !important;
     top: 0 !important;
