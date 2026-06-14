@@ -57,10 +57,11 @@
 
   function blackHoleFrame() {
     const mobile = state.width < 760;
+    const mobileRadius = Math.min(state.height * 0.38, state.width * 0.9);
     return {
-      x: state.width * (mobile ? 0.9 : 0.95), // Centered near right edge
-      y: state.height * 0.5,
-      radius: Math.max(state.width, state.height) * (mobile ? 0.35 : 0.32),
+      x: state.width * (mobile ? 1.33 : 0.95),
+      y: state.height * (mobile ? 0.54 : 0.5),
+      radius: mobile ? mobileRadius : Math.max(state.width, state.height) * 0.32,
     };
   }
 

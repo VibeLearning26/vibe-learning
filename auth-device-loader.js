@@ -11,6 +11,7 @@
       document.documentElement.dataset.authDeviceLoader = 'error';
       document.documentElement.dataset.authDeviceLoaderError = message;
       window.authDeviceLoaderError = message;
+      document.body.classList.add('auth-device-error', 'auth-device-fallback');
       console.error('Authentication device failed to load:', error);
     });
 })();

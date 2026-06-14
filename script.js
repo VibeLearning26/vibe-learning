@@ -19,7 +19,16 @@ function initAuthListener() {
   const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
   
   const loginBtn = document.getElementById('login-nav-btn');
-  if (!loginBtn || !supabase) return;
+  if (!supabase) {
+    window.location.replace('auth.html');
+    return;
+  }
+
+  supabase.auth.getSession().then(({ data }) => {
+    if (!data?.session) window.location.replace('auth.html');
+  });
+
+  if (!loginBtn) return;
 
   supabase.auth.onAuthStateChange((event, session) => {
     if (session) {
@@ -29,13 +38,10 @@ function initAuthListener() {
       loginBtn.onclick = async (e) => {
         e.preventDefault();
         await supabase.auth.signOut();
-        window.location.reload();
+        window.location.replace('auth.html');
       };
     } else {
-      // User is logged out
-      loginBtn.textContent = 'Login';
-      loginBtn.href = 'auth.html';
-      loginBtn.onclick = null;
+      window.location.replace('auth.html');
     }
   });
 }

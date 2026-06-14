@@ -9,6 +9,8 @@ if (!canvas) {
   throw new Error('Missing auth device canvas.');
 }
 
+const mobile3d = window.matchMedia('(max-width: 760px), (pointer: coarse)').matches;
+
 const SUPABASE_URL = 'https://fgdmxuslojnbyzeaweyd.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_T0xMYGMk2MyqEeGw_3QPeg_jr2YfCJR';
 const supabaseClient = window.supabase
@@ -70,30 +72,30 @@ function normalizeMeshName(name) {
 const renderer = new THREE.WebGLRenderer({
   canvas,
   alpha: true,
-  antialias: true,
+  antialias: !mobile3d,
   powerPreference: 'high-performance',
 });
 
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.08;
-renderer.shadowMap.enabled = true;
+renderer.shadowMap.enabled = !mobile3d;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 function createChromeEnvMap() {
   const canvas = document.createElement('canvas');
-  canvas.width = 512;
-  canvas.height = 512;
+  canvas.width = mobile3d ? 256 : 512;
+  canvas.height = mobile3d ? 256 : 512;
   const ctx = canvas.getContext('2d');
   
-  const grad = ctx.createLinearGradient(0, 0, 0, 512);
+  const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
   grad.addColorStop(0, '#ffffff');
   grad.addColorStop(0.48, '#7fb7ff');
   grad.addColorStop(0.5, '#111118');
   grad.addColorStop(1, '#050508');
   
   ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, 512, 512);
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
   
   const envTexture = new THREE.CanvasTexture(canvas);
   envTexture.mapping = THREE.EquirectangularReflectionMapping;
@@ -106,8 +108,8 @@ const pmremGenerator = new THREE.PMREMGenerator(renderer);
 pmremGenerator.compileEquirectangularShader();
 scene.environment = pmremGenerator.fromEquirectangular(createChromeEnvMap()).texture;
 
-const camera = new THREE.PerspectiveCamera(34, 1, 0.05, 80);
-camera.position.set(0, 1.18, 6.35);
+const camera = new THREE.PerspectiveCamera(mobile3d ? 48 : 34, 1, 0.05, 80);
+camera.position.set(0, 1.18, mobile3d ? 7.25 : 6.35);
 
 // Camera framing: default landing view vs. focused close-up on the device side.
 // The focused position sits on the line from the default camera toward the device,
@@ -126,9 +128,11 @@ const CAMERA_VIEWS = {
 const cameraLookAt = CAMERA_VIEWS.default.lookAt.clone();
 const cameraLookTarget = new THREE.Vector3();
 let cameraEase = 0.3;
-const cameraPositionTarget = CAMERA_VIEWS.default.position.clone();
-const deviceBaseTargetPosition = new THREE.Vector3(1.55, 2.82, 0);
-let deviceScaleTarget = 0.55;
+const cameraPositionTarget = mobile3d
+  ? new THREE.Vector3(0, 1.18, 7.25)
+  : CAMERA_VIEWS.default.position.clone();
+const deviceBaseTargetPosition = new THREE.Vector3(mobile3d ? 0.35 : 1.55, mobile3d ? 2.64 : 2.82, 0);
+let deviceScaleTarget = mobile3d ? 0.506 : 0.55;
 
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
@@ -143,16 +147,16 @@ const modelPivot = new THREE.Group();
 modelPivot.name = 'authentication-device-centered-rotation-pivot';
 deviceRoot.add(modelPivot);
 
-const deviceBasePosition = new THREE.Vector3(1.55, 2.82, 0);
+const deviceBasePosition = new THREE.Vector3(mobile3d ? 0.35 : 1.55, mobile3d ? 2.64 : 2.82, 0);
 deviceRoot.position.copy(deviceBasePosition);
 // Y rotation shifted -1.57 (clockwise 90°) from original -0.42
 deviceRoot.rotation.set(-0.05, 0, 0.03);
-deviceRoot.scale.set(0.55, 0.55, 0.55);
+deviceRoot.scale.setScalar(mobile3d ? 0.506 : 0.55);
 
-cameraPositionTarget.set(0, 1.18, 6.35);
+cameraPositionTarget.set(0, 1.18, mobile3d ? 7.25 : 6.35);
 cameraLookTarget.set(0, 0.7, 0);
 deviceBaseTargetPosition.copy(deviceBasePosition);
-deviceScaleTarget = 0.55;
+deviceScaleTarget = mobile3d ? 0.506 : 0.55;
 
 scene.add(deviceRoot);
 
@@ -1167,6 +1171,13 @@ function applyPhase(nextPhase) {
     phaseSetting.deviceRoot.basePosition.z
   );
   deviceScaleTarget = phaseSetting.deviceRoot.scale;
+  if (mobile3d) {
+    const focused = nextPhase !== 'assembled';
+    cameraPositionTarget.z += focused ? 1.5 : 0.9;
+    deviceBaseTargetPosition.x -= focused ? 1.72 : 1.2;
+    deviceBaseTargetPosition.y -= focused ? 0.28 : 0.18;
+    deviceScaleTarget *= focused ? 0.88 : 0.92;
+  }
   modelRotationEase = clamp(phaseSetting.easing?.rotation ?? modelRotationEase, 0.01, 1);
   cameraEase = clamp(phaseSetting.easing?.camera ?? cameraEase, 0.01, 1);
   state.cameraZoom = nextPhase === 'assembled' ? 0 : 1;
@@ -1641,7 +1652,7 @@ function resize() {
     left: rect.left,
     top: rect.top,
   };
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
+  renderer.setPixelRatio(mobile3d ? Math.min(window.devicePixelRatio || 1, 1) : Math.min(window.devicePixelRatio || 1, 1.75));
   renderer.setSize(width, height, false);
   camera.aspect = width / height;
   camera.updateProjectionMatrix();
@@ -2836,6 +2847,10 @@ canvas.addEventListener('pointerup', endSlideDrag);
 canvas.addEventListener('pointercancel', endSlideDrag);
 window.addEventListener('keydown', handleTyping);
 window.addEventListener('resize', resize);
+canvas.addEventListener('webglcontextlost', (event) => {
+  event.preventDefault();
+  document.body.classList.add('auth-device-error', 'auth-device-fallback');
+});
 
 function beginLandingAuthTransition(mode = 'signin') {
   if (state.phase === 'loading' || state.phase === 'landingAnimationPlaying') {

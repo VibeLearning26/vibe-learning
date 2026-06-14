@@ -5906,3 +5906,152 @@ body.auth-galaxy-page .auth-trust span {
     padding: 1rem !important;
   }
 }
+
+/* Authentication mobile flow. This final override intentionally follows all
+   legacy responsive rules so the phone layout remains predictable. */
+@media (max-width: 760px) {
+  body.auth-galaxy-page {
+    min-height: 100dvh;
+    overflow: hidden;
+  }
+
+  body.auth-galaxy-page .auth-galaxy-canvas {
+    width: 100dvw !important;
+    height: 100dvh !important;
+  }
+
+  body.auth-galaxy-page .auth-galaxy-veil {
+    background:
+      radial-gradient(circle at 88% 55%, transparent 0 8rem, rgba(2, 0, 8, 0.08) 16rem),
+      linear-gradient(90deg, rgba(0, 0, 0, 0.72) 0%, rgba(4, 1, 12, 0.32) 54%, rgba(3, 0, 9, 0.18) 100%),
+      linear-gradient(180deg, rgba(7, 1, 18, 0.08), rgba(1, 1, 8, 0.45));
+  }
+
+  body.auth-galaxy-page .auth-galaxy-layout {
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: max(4.75rem, env(safe-area-inset-top)) 1.25rem max(2rem, env(safe-area-inset-bottom));
+  }
+
+  body.auth-galaxy-page .auth-hero-copy {
+    width: min(100%, 25rem);
+    margin: 0 auto;
+    padding: 0;
+    text-align: center;
+    transform: translateY(-1.2rem);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+
+  body.auth-galaxy-page .auth-hero-kicker,
+  body.auth-galaxy-page .auth-hero-actions {
+    margin-left: auto;
+    margin-right: auto;
+    justify-content: center;
+  }
+
+  body.auth-galaxy-page .auth-hero-copy h1 {
+    max-width: 11ch;
+    margin-inline: auto;
+    font-size: clamp(2.15rem, 10.2vw, 3.05rem);
+    line-height: 1.04;
+    text-wrap: balance;
+  }
+
+  body.auth-galaxy-page .auth-hero-text {
+    max-width: 27ch;
+    margin-inline: auto;
+    font-size: 0.84rem;
+    line-height: 1.55;
+  }
+
+  body.auth-galaxy-page .auth-hero-actions {
+    margin-top: 1.45rem;
+  }
+
+  body.auth-galaxy-page .auth-hero-btn {
+    min-height: 3.1rem;
+    padding-inline: 1.45rem;
+  }
+
+  .auth-device-canvas {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 5;
+    width: 100vw !important;
+    height: 100dvh !important;
+    margin: 0 !important;
+    transform-origin: 50% 72%;
+  }
+
+  body.auth-device-summoning .auth-hero-copy,
+  body.auth-device-summoned .auth-hero-copy,
+  body.auth-device-focused .auth-hero-copy {
+    opacity: 0 !important;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-1rem) scale(0.96) !important;
+    animation: none !important;
+  }
+
+  body.auth-device-summoning .auth-device-canvas {
+    animation-duration: 0.72s;
+  }
+
+  body.auth-device-fallback {
+    overflow-y: auto;
+  }
+
+  body.auth-device-fallback .auth-device-canvas,
+  body.auth-device-fallback .auth-hero-copy {
+    display: none;
+  }
+
+  body.auth-device-fallback .auth-galaxy-layout {
+    display: block;
+    padding-top: max(5rem, env(safe-area-inset-top));
+  }
+
+  body.auth-device-fallback .auth-gateway,
+  body.auth-device-fallback.auth-board-focused .auth-gateway {
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    z-index: 6 !important;
+    width: min(100%, 28rem) !important;
+    height: auto !important;
+    max-width: 28rem !important;
+    margin: 0 auto !important;
+    overflow: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+}
+
+@media (max-width: 420px) {
+  body.auth-galaxy-page .auth-galaxy-layout {
+    padding-inline: 1rem;
+  }
+
+  body.auth-galaxy-page .auth-hero-copy {
+    width: min(100%, 22rem);
+    transform: translateY(-0.7rem);
+  }
+
+  body.auth-galaxy-page .auth-hero-kicker {
+    max-width: 18.5rem;
+    padding: 0.42rem 0.72rem;
+    font-size: 0.72rem;
+    line-height: 1.35;
+  }
+
+  body.auth-galaxy-page .auth-hero-copy h1 {
+    font-size: clamp(2rem, 10vw, 2.65rem);
+  }
+
+  body.auth-galaxy-page .auth-hero-text {
+    max-width: 25ch;
+    font-size: 0.8rem;
+  }
+}

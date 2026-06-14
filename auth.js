@@ -35,6 +35,12 @@ const supabaseClient = window.supabase
   ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
   : null;
 
+if (supabaseClient) {
+  supabaseClient.auth.getSession().then(({ data }) => {
+    if (data?.session) window.location.replace('index.html');
+  });
+}
+
 // ============================================
 // 2. DOM References
 // ============================================
@@ -96,6 +102,18 @@ focusLoginCta?.addEventListener('click', activateSignin);
 heroLoginCta?.addEventListener('click', activateSignin);
 focusSignupCta?.addEventListener('click', activateSignup);
 heroSignupCta?.addEventListener('click', activateSignup);
+
+if (heroLoginCta && window.matchMedia('(max-width: 760px), (pointer: coarse)').matches) {
+  heroLoginCta.addEventListener('click', () => {
+    window.setTimeout(() => {
+      const loaderState = document.documentElement.dataset.authDeviceLoader;
+      const deviceReady = document.body.classList.contains('auth-device-ready');
+      if (loaderState === 'error' || !deviceReady) {
+        document.body.classList.add('auth-device-fallback');
+      }
+    }, 6500);
+  });
+}
 
 // ============================================
 // 4. View Transitions

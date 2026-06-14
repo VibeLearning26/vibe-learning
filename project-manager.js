@@ -415,7 +415,12 @@ function generateShareCode() {
 function initShareCard() {
   // Copy button
   DOM.copyCodeBtn()?.addEventListener('click', () => {
-    const code = DOM.shareCodeValue()?.textContent || '';
+    const code = (DOM.shareCodeValue()?.textContent || '').trim();
+    if (!code) {
+      showMsg(DOM.formError(), 'No project code is available to copy yet.');
+      return;
+    }
+
     navigator.clipboard.writeText(code).then(() => {
       const copied = DOM.shareCopied();
       if (copied) {
@@ -448,12 +453,19 @@ function initShareCard() {
   });
 }
 
-function showShareCode(project) {
+function showShareCode(project, fallbackCode = '') {
+  const shareCode = project?.share_code || project?.shareCode || fallbackCode;
+
+  if (!shareCode) {
+    showMsg(DOM.formError(), 'Project roadmap was created, but the share code is missing. Please try creating it again.');
+    return;
+  }
+
   DOM.createFormCard().style.display = 'none';
   DOM.joinFormCard().style.display = 'none';
   DOM.modeTabs().style.display = 'none';
   DOM.shareCard().style.display = 'block';
-  DOM.shareCodeValue().textContent = project.shareCode;
+  DOM.shareCodeValue().textContent = shareCode;
   DOM.shareCopied().style.display = 'none';
   if (window.lucide) lucide.createIcons();
 
@@ -663,7 +675,15 @@ async function analyzeAndGenerateRoadmap({ name, role, creatorName, idea, extra,
 
     if (error) throw error;
     
-    const savedProject = data[0];
+    const savedProject = {
+      ...(data?.[0] || {
+      ...newProject,
+      id: generateId(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+      }),
+      share_code: data?.[0]?.share_code || shareCode
+    };
 
     // 2. Save code locally
     saveJoinedCode(shareCode);
@@ -675,7 +695,7 @@ async function analyzeAndGenerateRoadmap({ name, role, creatorName, idea, extra,
 
     // Show Share Code card first (so creator can share with teammates)
     DOM.submitSection().style.display = 'block';
-    showShareCode(savedProject);
+    showShareCode(savedProject, shareCode);
 
     // Reset form
     DOM.projectForm().reset();
@@ -684,9 +704,12 @@ async function analyzeAndGenerateRoadmap({ name, role, creatorName, idea, extra,
 
   } catch (err) {
     console.error('Error saving project to Supabase:', err);
-    alert('Failed to save project to database. Please check your Supabase connection.');
     DOM.loadingSection().style.display = 'none';
     DOM.submitSection().style.display = 'block';
+    showMsg(
+      DOM.formError(),
+      'The roadmap was generated, but it could not be saved online, so a teammate share code cannot be created yet. Please check your Supabase table/policies and try again.'
+    );
     setLoading(btn, false);
   }
 }
