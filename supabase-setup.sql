@@ -113,3 +113,85 @@ CREATE TRIGGER on_auth_user_created_profile
 AFTER INSERT ON auth.users
 FOR EACH ROW
 EXECUTE FUNCTION public.handle_new_auth_profile();
+
+-- ============================================
+-- DoubtHub Submit Page
+-- Stores project / assignment / final proof submissions from submit.html.
+-- Attachments are uploaded to Supabase Storage bucket: submission-files.
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS project_submissions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  submitter_email TEXT,
+  title TEXT NOT NULL,
+  category TEXT NOT NULL DEFAULT 'Other',
+  description TEXT NOT NULL,
+  website_url TEXT,
+  app_url TEXT,
+  document_url TEXT,
+  attachments JSONB NOT NULL DEFAULT '[]',
+  status TEXT NOT NULL DEFAULT 'submitted',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE project_submissions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can insert own project submissions" ON project_submissions;
+DROP POLICY IF EXISTS "Anyone can insert project submissions" ON project_submissions;
+CREATE POLICY "Anyone can insert project submissions"
+  ON project_submissions FOR INSERT
+  WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Users can read own project submissions" ON project_submissions;
+CREATE POLICY "Users can read own project submissions"
+  ON project_submissions FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE INDEX IF NOT EXISTS idx_project_submissions_created_at ON project_submissions(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_project_submissions_user_id ON project_submissions(user_id);
+
+INSERT INTO storage.buckets (id, name, public, file_size_limit)
+VALUES ('submission-files', 'submission-files', false, 5242880)
+ON CONFLICT (id) DO UPDATE
+SET file_size_limit = 5242880;
+
+DROP POLICY IF EXISTS "Users can upload own submission files" ON storage.objects;
+DROP POLICY IF EXISTS "Anyone can upload submission files" ON storage.objects;
+CREATE POLICY "Anyone can upload submission files"
+  ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'submission-files');
+
+DROP POLICY IF EXISTS "Users can read submission files" ON storage.objects;
+CREATE POLICY "Users can read submission files"
+  ON storage.objects FOR SELECT
+  USING (
+    bucket_id = 'submission-files'
+    AND auth.role() = 'authenticated'
+  );
+
+-- ============================================
+-- DoubtHub Contact Requests
+-- Stores messages sent from the Contact section on index.html.
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS contact_requests (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  message TEXT NOT NULL,
+  source TEXT NOT NULL DEFAULT 'index_contact',
+  status TEXT NOT NULL DEFAULT 'new',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE contact_requests ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anyone can insert contact requests" ON contact_requests;
+CREATE POLICY "Anyone can insert contact requests"
+  ON contact_requests FOR INSERT
+  WITH CHECK (true);
+
+CREATE INDEX IF NOT EXISTS idx_contact_requests_created_at
+  ON contact_requests(created_at DESC);

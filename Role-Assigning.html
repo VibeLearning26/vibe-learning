@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Role Assignment Wheel — DoubtHub</title>
+  <meta name="description" content="DoubtHub Role Assignment Wheel: Spin the wheel to discover your assigned role and teammates. Admin-controlled via Supabase.">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎡</text></svg>">
+
+  <!-- Google Fonts & Main Stylesheet -->
+  <link rel="stylesheet" href="style.css?v=20260616-clay-role">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    /* ============================================
+       Role Wheel — Scoped Styles (DoubtHub Theme)
+       ============================================ */
+
+    .rw-hero {
+      padding: 100px 0 40px;
+      text-align: center;
+    }
+
+    .rw-hero h1 {
+      font-size: clamp(2rem, 4.5vw, 3.5rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin: 0 0 16px;
+    }
+
+    .rw-hero .text-gradient-blue {
+      background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .rw-hero p {
+      max-width: 640px;
+      margin: 0 auto;
+      color: var(--text-gray);
+      font-size: 1.05rem;
+      line-height: 1.6;
+    }
+
+    /* User Identity Bar */
+    .rw-identity {
+      max-width: 600px;
+      margin: 32px auto 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .rw-identity-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      border-radius: 14px;
+      background: rgba(56, 189, 248, 0.06);
+      border: 1px solid rgba(56, 189, 248, 0.18);
+      flex: 1;
+    }
+
+    .rw-identity-info i {
+      width: 20px;
+      height: 20px;
+      color: var(--accent-blue);
+      flex-shrink: 0;
+    }
+
+    .rw-identity-info span {
+      color: var(--text-white);
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .rw-identity-info .rw-email {
+      color: var(--text-gray);
+      font-weight: 400;
+      font-size: 0.85rem;
+      margin-left: 4px;
+    }
+
+    .rw-login-prompt {
+      text-align: center;
+      margin-top: 32px;
+    }
+
+    .rw-login-prompt p {
+      color: var(--text-gray);
+      margin-bottom: 16px;
+    }
+
+    .rw-login-prompt .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Workspace Grid */
+    .rw-workspace {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 24px;
+      align-items: start;
+      padding-bottom: 80px;
+    }
+
+    /* Wheel Stage */
+    .rw-stage {
+      padding: 28px;
+      border-radius: 20px;
+    }
+
+    .rw-wheels {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+
+    .rw-wheel-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .rw-wheel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .rw-wheel-header h2 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-white);
+    }
+
+    .rw-count-pill {
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.22);
+    }
+
+    .rw-wheel-shell {
+      position: relative;
+      width: 100%;
+      max-width: 380px;
+      aspect-ratio: 1;
+      margin: 0 auto;
+      display: grid;
+      place-items: center;
+    }
+
+    .rw-wheel-shell canvas {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 16px 30px rgba(0, 0, 0, 0.4));
+    }
+
+    .rw-pointer {
+      position: absolute;
+      top: -4px;
+      left: 50%;
+      width: 0;
+      height: 0;
+      transform: translateX(-50%);
+      border-left: 14px solid transparent;
+      border-right: 14px solid transparent;
+      border-top: 26px solid var(--accent-blue);
+      filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.5));
+      z-index: 3;
+    }
+
+    .rw-hub {
+      position: absolute;
+      width: 78px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: 6px solid rgba(255, 255, 255, 0.9);
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.16), 0 14px 28px rgba(0, 0, 0, 0.36);
+      display: grid;
+      place-items: center;
+      color: var(--text-white);
+      font-weight: 800;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Summary Metrics */
+    .rw-summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 28px;
+    }
+
+    .rw-metric {
+      padding: 16px;
+      border-radius: 14px;
+      border: 1px solid var(--border-glass);
+      background: rgba(15, 23, 42, 0.6);
+    }
+
+    .rw-metric strong {
+      display: block;
+      font-size: 1.6rem;
+      line-height: 1;
+      color: var(--text-white);
+      font-family: var(--font-heading);
+    }
+
+    .rw-metric span {
+      display: block;
+      margin-top: 6px;
+      color: var(--text-gray);
+      font-size: 0.82rem;
+      line-height: 1.35;
+    }
+
+    /* Sidebar */
+    .rw-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .rw-panel {
+      padding: 22px;
+      border-radius: 18px;
+    }
+
+    .rw-panel h2 {
+      margin: 0 0 16px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-white);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .rw-panel h2 i {
+      width: 18px;
+      height: 18px;
+      color: var(--accent-blue);
+    }
+
+    /* Spin Controls */
+    .rw-spin-area {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .rw-spin-btn {
+      width: 100%;
+      min-height: 52px;
+      border: none;
+      border-radius: 14px;
+      padding: 0 20px;
+      font-size: 1rem;
+      font-weight: 800;
+      color: #0f172a;
+      background: linear-gradient(135deg, var(--accent-blue) 0%, #0284c7 100%);
+      box-shadow: 0 6px 24px rgba(56, 189, 248, 0.3);
+      cursor: pointer;
+      transition: all 200ms ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .rw-spin-btn:hover:not(:disabled) {
+      background: linear-gradient(135deg, #67d5ff 0%, #0ea5e9 100%);
+      box-shadow: 0 10px 30px rgba(56, 189, 248, 0.45);
+      transform: translateY(-2px);
+    }
+
+    .rw-spin-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .rw-spin-hint {
+      color: var(--text-gray);
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+
+    /* Lock Banner */
+    .rw-lock-banner {
+      display: none;
+      padding: 14px 18px;
+      border-radius: 12px;
+      background: rgba(168, 85, 247, 0.08);
+      border: 1px solid rgba(168, 85, 247, 0.22);
+      color: var(--text-white);
+      font-size: 0.9rem;
+      line-height: 1.5;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .rw-lock-banner.visible {
+      display: flex;
+    }
+
+    .rw-lock-banner i {
+      width: 18px;
+      height: 18px;
+      color: var(--accent-purple);
+      flex-shrink: 0;
+    }
+
+    .rw-lock-banner .rw-days-left {
+      color: var(--accent-purple);
+      font-weight: 700;
+    }
+
+    /* My Role Card */
+    .rw-my-role {
+      display: none;
+      padding: 22px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.08), rgba(168, 85, 247, 0.08));
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      text-align: center;
+    }
+
+    .rw-my-role.visible {
+      display: block;
+    }
+
+    .rw-my-role-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent-blue);
+      margin-bottom: 8px;
+    }
+
+    .rw-my-role-name {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--text-white);
+      font-family: var(--font-heading);
+      line-height: 1.2;
+      margin-bottom: 6px;
+    }
+
+    .rw-my-role-expiry {
+      font-size: 0.82rem;
+      color: var(--text-gray);
+    }
+
+    /* Assignments List */
+    .rw-assignment-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .rw-assignment-card {
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--border-glass);
+      transition: border-color 200ms ease;
+    }
+
+    .rw-assignment-card:hover {
+      border-color: rgba(56, 189, 248, 0.2);
+    }
+
+    .rw-assignment-card.rw-highlight {
+      border-color: rgba(56, 189, 248, 0.4);
+      background: rgba(56, 189, 248, 0.06);
+    }
+
+    .rw-assignment-member {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .rw-assignment-member .rw-you-badge {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      color: var(--accent-blue);
+      font-weight: 700;
+    }
+
+    .rw-assignment-role {
+      font-size: 0.9rem;
+      color: var(--text-white);
+      line-height: 1.4;
+    }
+
+    .rw-empty {
+      color: var(--text-gray);
+      font-size: 0.9rem;
+      line-height: 1.5;
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    /* Loading state */
+    .rw-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 40px;
+      color: var(--text-gray);
+      font-size: 0.95rem;
+    }
+
+    .rw-loading i {
+      animation: rw-spin-icon 1s linear infinite;
+    }
+
+    @keyframes rw-spin-icon {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsive */
+    @media (max-width: 940px) {
+      .rw-workspace {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .rw-wheels {
+        grid-template-columns: 1fr;
+      }
+
+      .rw-summary {
+        grid-template-columns: 1fr;
+      }
+
+      .rw-hero {
+        padding: 80px 0 24px;
+      }
+    }
+
+    /* ============================================
+       Claymorphism Role Wheel Composition
+       ============================================ */
+    body.clay-page .rw-hero {
+      position: relative;
+      padding: 126px 0 38px;
+      text-align: left;
+    }
+
+    body.clay-page .rw-hero .container {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(300px, 0.72fr);
+      grid-template-areas:
+        "tag identity"
+        "title identity"
+        "copy identity"
+        "login login";
+      column-gap: clamp(2rem, 6vw, 6rem);
+      align-items: center;
+    }
+
+    body.clay-page .rw-hero .section-tag {
+      grid-area: tag;
+      justify-self: start;
+    }
+
+    body.clay-page .rw-hero h1 {
+      grid-area: title;
+      max-width: 760px;
+      margin: 20px 0 14px;
+      font-size: clamp(2.5rem, 5.4vw, 5rem);
+      letter-spacing: -0.035em;
+    }
+
+    body.clay-page .rw-hero > .container > p {
+      grid-area: copy;
+      max-width: 690px;
+      margin: 0;
+      color: #aeb9cc;
+    }
+
+    body.clay-page .rw-identity {
+      grid-area: identity;
+      width: 100%;
+      max-width: none;
+      margin: 0;
+    }
+
+    body.clay-page .rw-identity-info {
+      position: relative;
+      min-height: 112px;
+      padding: 22px 24px 22px 88px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 166, 82, 0.09);
+      border-radius: 24px;
+      background: linear-gradient(145deg, rgba(32, 53, 86, 0.96), rgba(9, 22, 43, 0.98));
+      box-shadow: 14px 18px 34px rgba(0, 3, 12, 0.46), inset 2px 3px 3px rgba(255,255,255,0.04);
+    }
+
+    body.clay-page .rw-identity-info::before {
+      content: '';
+      position: absolute;
+      left: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 17px;
+      background: linear-gradient(145deg, #ffb35a, #e45320);
+      box-shadow: 7px 9px 16px rgba(0,3,12,.42), inset 2px 3px 4px rgba(255,236,205,.4);
+    }
+
+    body.clay-page .rw-identity-info i {
+      position: absolute;
+      left: 33px;
+      z-index: 1;
+      color: #2c1107;
+    }
+
+    body.clay-page .rw-identity-info span {
+      position: relative;
+      z-index: 1;
+    }
+
+    body.clay-page .rw-login-prompt {
+      grid-area: login;
+    }
+
+    body.clay-page .rw-workspace {
+      grid-template-columns: minmax(0, 1.75fr) minmax(290px, 0.72fr);
+      gap: 28px;
+      padding: 18px 0 92px;
+    }
+
+    body.clay-page .rw-stage {
+      position: relative;
+      overflow: hidden;
+      padding: clamp(24px, 3vw, 38px);
+      border-radius: 30px;
+    }
+
+    body.clay-page .rw-stage::before {
+      content: '';
+      position: absolute;
+      width: 280px;
+      height: 280px;
+      right: -110px;
+      top: -130px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 140, 45, 0.18), transparent 68%);
+      pointer-events: none;
+    }
+
+    body.clay-page .rw-wheels {
+      position: relative;
+      z-index: 1;
+      gap: clamp(20px, 3vw, 38px);
+    }
+
+    body.clay-page .rw-wheel-panel {
+      gap: 20px;
+      padding: 18px;
+      border-radius: 24px;
+      background: linear-gradient(145deg, rgba(11, 27, 52, 0.72), rgba(5, 16, 33, 0.42));
+      box-shadow: inset 5px 5px 13px rgba(0,3,12,.4), inset -3px -3px 8px rgba(68,90,127,.08);
+    }
+
+    body.clay-page .rw-wheel-header h2 {
+      font-size: 1.08rem;
+    }
+
+    body.clay-page .rw-count-pill {
+      border: 0;
+      color: #2c1107;
+      background: linear-gradient(145deg, #ffb35a, #e55720);
+      box-shadow: 5px 7px 13px rgba(0,3,12,.36), inset 1px 2px 2px rgba(255,238,211,.38);
+    }
+
+    body.clay-page .rw-wheel-shell canvas {
+      filter: drop-shadow(0 24px 30px rgba(0, 2, 10, 0.5)) drop-shadow(0 0 20px rgba(255, 120, 32, 0.08));
+    }
+
+    body.clay-page .rw-pointer {
+      border-top-color: #ff9d3e;
+      filter: drop-shadow(0 5px 8px rgba(0,3,12,.48)) drop-shadow(0 0 10px rgba(255,130,36,.32));
+    }
+
+    body.clay-page .rw-hub {
+      width: 84px;
+      border: 5px solid #ff9c3e;
+      color: #fff4e7;
+      background: linear-gradient(145deg, #1c3457, #09172e);
+      box-shadow: 8px 11px 20px rgba(0,3,12,.52), inset 2px 3px 4px rgba(255,255,255,.08), 0 0 18px rgba(255,126,34,.17);
+    }
+
+    body.clay-page .rw-summary {
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    body.clay-page .rw-metric {
+      padding: 18px 20px;
+      border: 1px solid rgba(255,166,82,.07);
+      border-radius: 20px;
+      background: linear-gradient(145deg, #1b3153, #0a1931);
+      box-shadow: 8px 11px 20px rgba(0,3,12,.38), inset 1px 2px 2px rgba(255,255,255,.04);
+    }
+
+    body.clay-page .rw-metric strong {
+      color: #ffad50;
+    }
+
+    body.clay-page .rw-sidebar {
+      position: sticky;
+      top: 104px;
+      gap: 22px;
+    }
+
+    body.clay-page .rw-panel,
+    body.clay-page .rw-my-role {
+      padding: 24px;
+      border-radius: 24px;
+    }
+
+    body.clay-page .rw-panel h2 i {
+      color: #ff9b3d;
+    }
+
+    body.clay-page .rw-spin-btn {
+      min-height: 58px;
+      border-radius: 999px;
+      color: #2b1006;
+      background: linear-gradient(145deg, #ffb45a, #ff8128 52%, #cf3f1c);
+      box-shadow: 8px 11px 20px rgba(0,3,12,.46), inset 0 3px 4px rgba(255,235,203,.44), inset 0 -5px 8px rgba(119,26,10,.28), 0 0 20px rgba(255,121,35,.16);
+      transition: transform .3s ease, box-shadow .3s ease, filter .3s ease;
+    }
+
+    body.clay-page .rw-spin-btn:hover:not(:disabled) {
+      background: linear-gradient(145deg, #ffc477, #ff8c31 52%, #de4a20);
+      box-shadow: 11px 15px 26px rgba(0,3,12,.54), inset 0 3px 5px rgba(255,240,216,.46), 0 0 28px rgba(255,121,35,.23);
+      transform: translateY(-4px);
+    }
+
+    body.clay-page .rw-spin-btn:disabled {
+      color: #7f8999;
+      background: linear-gradient(145deg, #263958, #101e36);
+      box-shadow: inset 4px 5px 11px rgba(0,3,12,.42), inset -2px -2px 6px rgba(77,97,132,.1);
+      opacity: 1;
+    }
+
+    body.clay-page .rw-lock-banner,
+    body.clay-page .rw-my-role {
+      border: 1px solid rgba(255, 154, 61, .13);
+      background: linear-gradient(145deg, rgba(104,44,24,.7), rgba(30,24,39,.9));
+      box-shadow: inset 4px 5px 12px rgba(0,3,12,.32), 0 0 20px rgba(255,109,31,.07);
+    }
+
+    body.clay-page .rw-my-role-label,
+    body.clay-page .rw-days-left {
+      color: #ffad50;
+    }
+
+    body.clay-page .rw-assignment-card {
+      padding: 16px 18px;
+      border: 1px solid rgba(255,166,82,.07);
+      border-radius: 18px;
+      background: linear-gradient(145deg, #1b3153, #09182f);
+      box-shadow: 6px 8px 16px rgba(0,3,12,.32), inset 1px 2px 2px rgba(255,255,255,.03);
+      transition: transform .28s ease, box-shadow .28s ease, border-color .28s ease;
+    }
+
+    body.clay-page .rw-assignment-card:hover {
+      border-color: rgba(255, 154, 61, .24);
+      transform: translateY(-3px);
+      box-shadow: 9px 12px 21px rgba(0,3,12,.42), 0 0 16px rgba(255,109,31,.07);
+    }
+
+    body.clay-page .rw-assignment-card.rw-highlight {
+      border-color: rgba(255,154,61,.42);
+      background: linear-gradient(145deg, rgba(111,46,24,.86), rgba(32,25,40,.94));
+    }
+
+    body.clay-page .rw-assignment-member,
+    body.clay-page .rw-you-badge {
+      color: #ffad50;
+    }
+
+    body.clay-page .rw-you-badge {
+      border-color: rgba(255,154,61,.25) !important;
+      background: rgba(255,125,36,.1) !important;
+    }
+
+    @media (max-width: 1080px) {
+      body.clay-page .rw-hero .container {
+        grid-template-columns: 1fr;
+        grid-template-areas: "tag" "title" "copy" "identity" "login";
+      }
+
+      body.clay-page .rw-identity {
+        max-width: 680px;
+        margin-top: 28px;
+      }
+    }
+
+    @media (max-width: 940px) {
+      body.clay-page .rw-workspace {
+        grid-template-columns: 1fr;
+      }
+
+      body.clay-page .rw-sidebar {
+        position: static;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      body.clay-page .rw-my-role {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 700px) {
+      body.clay-page .rw-hero {
+        padding: 100px 0 28px;
+      }
+
+      body.clay-page .rw-hero h1 {
+        font-size: clamp(2.35rem, 13vw, 3.6rem);
+      }
+
+      body.clay-page .rw-identity-info {
+        min-height: 92px;
+        padding: 18px 16px 18px 76px;
+        flex-wrap: wrap;
+      }
+
+      body.clay-page .rw-identity-info::before {
+        left: 16px;
+        width: 44px;
+        height: 44px;
+      }
+
+      body.clay-page .rw-identity-info i {
+        left: 28px;
+      }
+
+      body.clay-page .rw-sidebar {
+        grid-template-columns: 1fr;
+      }
+
+      body.clay-page .rw-stage {
+        padding: 18px;
+        border-radius: 22px;
+      }
+
+      body.clay-page .rw-wheel-panel {
+        padding: 14px;
+      }
+    }
+  </style>
+</head>
+<body class="clay-page role-wheel-page">
+
+  <!-- ==========================================
+       BACKGROUND DYNAMIC ELEMENTS
+       ========================================== -->
+  <div class="bg-blobs" aria-hidden="true">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <!-- ==========================================
+       NAVIGATION BAR
+       ========================================== -->
+  <nav class="navbar" id="navbar" aria-label="Main Navigation">
+    <div class="container nav-container">
+      <a href="index.html" class="logo-link" id="logo-nav">
+        <i data-lucide="help-circle" class="logo-icon" aria-hidden="true"></i>
+        <span class="logo-text">Doubt<span>Hub</span></span>
+      </a>
+
+      <button class="nav-toggle" id="nav-toggle-btn" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="nav-menu-list">
+        <i data-lucide="menu" aria-hidden="true"></i>
+      </button>
+
+      <ul class="nav-menu" id="nav-menu-list" aria-hidden="true">
+        <li class="nav-item"><a href="index.html">Home</a></li>
+        <li class="nav-item"><a href="Project_manager.html">Project Manager</a></li>
+        <li class="nav-item"><a href="Role-Assigning.html" class="nav-active" style="color:var(--accent-blue)">Role Wheel</a></li>
+        <li class="nav-item"><a href="submit.html">Submit Project</a></li>
+        <li class="nav-item"><a href="index.html#future-scope">Future Scope</a></li>
+        <li class="nav-item"><a href="index.html#contact">Contact</a></li>
+        <li class="nav-item">
+          <a href="auth.html" class="btn btn-primary nav-btn" id="login-nav-btn">Login</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ==========================================
+       HERO SECTION
+       ========================================== -->
+  <header class="rw-hero">
+    <div class="container">
+      <span class="section-tag" id="rw-tag">
+        <i data-lucide="target" aria-hidden="true" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"></i>
+        Role Assignment
+      </span>
+      <h1>Spin the Wheel, <span class="text-gradient-blue">Find Your Role</span></h1>
+      <p>Roles and team members are managed by your admin. Spin the wheel to get your assignment — locked for a configurable number of days.</p>
+
+      <!-- User Identity (shown when logged in) -->
+      <div class="rw-identity" id="rw-identity" style="display:none;">
+        <div class="rw-identity-info">
+          <i data-lucide="user-check"></i>
+          <span id="rw-user-name">—</span>
+          <span class="rw-email" id="rw-user-email"></span>
+        </div>
+      </div>
+
+      <!-- Login prompt (shown when NOT logged in) -->
+      <div class="rw-login-prompt" id="rw-login-prompt" style="display:none;">
+        <p>Log in to see your assigned role and participate in the wheel spin.</p>
+        <a href="auth.html" class="btn btn-primary">
+          <i data-lucide="log-in"></i>
+          Log In to Continue
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==========================================
+       MAIN WORKSPACE
+       ========================================== -->
+  <main class="container" id="rw-main" style="display:none;">
+    <section class="rw-workspace" aria-label="Role assignment wheel workspace">
+
+      <!-- LEFT: Wheel Stage -->
+      <div class="rw-stage glass-panel">
+
+        <!-- Loading State -->
+        <div class="rw-loading" id="rw-loading">
+          <i data-lucide="loader-2" style="width:20px;height:20px;"></i>
+          Loading wheel data from admin...
+        </div>
+
+        <!-- Wheels (hidden until loaded) -->
+        <div id="rw-wheels-container" style="display:none;">
+          <div class="rw-wheels">
+            <article class="rw-wheel-panel">
+              <div class="rw-wheel-header">
+                <h2>Roles</h2>
+                <span class="rw-count-pill" id="rw-role-count">0</span>
+              </div>
+              <div class="rw-wheel-shell">
+                <div class="rw-pointer" aria-hidden="true"></div>
+                <canvas id="rw-role-canvas" width="760" height="760" aria-label="Wheel containing roles"></canvas>
+                <div class="rw-hub">Roles</div>
+              </div>
+            </article>
+
+            <article class="rw-wheel-panel">
+              <div class="rw-wheel-header">
+                <h2>Members</h2>
+                <span class="rw-count-pill" id="rw-member-count">0</span>
+              </div>
+              <div class="rw-wheel-shell">
+                <div class="rw-pointer" aria-hidden="true"></div>
+                <canvas id="rw-member-canvas" width="760" height="760" aria-label="Wheel containing members"></canvas>
+                <div class="rw-hub">Team</div>
+              </div>
+            </article>
+          </div>
+
+          <!-- Summary Metrics -->
+          <div class="rw-summary" aria-live="polite">
+            <div class="rw-metric">
+              <strong id="rw-pair-count">0</strong>
+              <span>assignments created</span>
+            </div>
+            <div class="rw-metric">
+              <strong id="rw-duration-days">7</strong>
+              <span>day lock period</span>
+            </div>
+            <div class="rw-metric">
+              <strong id="rw-status-text">Ready</strong>
+              <span id="rw-status-sub">Spin to assign roles</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Sidebar -->
+      <aside class="rw-sidebar">
+
+        <!-- My Role Card -->
+        <div class="rw-my-role glass-panel" id="rw-my-role">
+          <div class="rw-my-role-label">Your Assigned Role</div>
+          <div class="rw-my-role-name" id="rw-my-role-name">—</div>
+          <div class="rw-my-role-expiry" id="rw-my-role-expiry">—</div>
+        </div>
+
+        <!-- Spin Controls -->
+        <section class="rw-panel glass-panel">
+          <h2><i data-lucide="settings-2"></i> Spin Controls</h2>
+
+          <div class="rw-spin-area">
+            <!-- Lock Banner -->
+            <div class="rw-lock-banner" id="rw-lock-banner">
+              <i data-lucide="lock"></i>
+              <span>Assignments locked for <span class="rw-days-left" id="rw-days-left">—</span></span>
+            </div>
+
+            <button class="rw-spin-btn" id="rw-spin-btn" type="button" disabled>
+              <i data-lucide="rotate-cw" style="width:18px;height:18px;"></i>
+              <span id="rw-spin-btn-text">Loading...</span>
+            </button>
+
+            <p class="rw-spin-hint" id="rw-spin-hint">Roles and members are set by the admin. The spin assigns each member a role.</p>
+          </div>
+        </section>
+
+        <!-- Assignments List -->
+        <section class="rw-panel glass-panel" id="rw-assignments-section">
+          <h2><i data-lucide="clipboard-list"></i> Team Assignments</h2>
+          <div class="rw-assignment-list" id="rw-assignment-list">
+            <p class="rw-empty">Spin the wheel to create assignments.</p>
+          </div>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <!-- ==========================================
+       SCRIPTS
+       ========================================== -->
+  <script>
+    // ============================================
+    // 1. Supabase Configuration
+    // ============================================
+    const SUPABASE_URL = 'https://fgdmxuslojnbyzeaweyd.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_T0xMYGMk2MyqEeGw_3QPeg_jr2YfCJR';
+    const supabaseClient = window.supabase
+      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+      : null;
+
+    // ============================================
+    // 2. Wheel Drawing
+    // ============================================
+    const WHEEL_PALETTE = ['#ff9b3d', '#c13d1e', '#f06b24', '#7d2b24', '#ffb458', '#9d331f', '#df5621', '#5f2940'];
+
+    let roleRotation = -Math.PI / 2;
+    let memberRotation = -Math.PI / 2;
+    let isSpinning = false;
+
+    // Data from Supabase
+    let wheelRoles = [];
+    let wheelMembers = [];
+    let wheelConfig = { assignment_duration_days: 7, allow_spin: true };
+    let activeAssignments = [];
+    let currentUser = null;
+    let currentMember = null; // The wheel_member matching this user
+
+    function drawWheel(canvas, items, rotation, emptyLabel, colorOverrides) {
+      const ctx = canvas.getContext('2d');
+      const size = canvas.width;
+      const center = size / 2;
+      const radius = center - 18;
+
+      ctx.clearRect(0, 0, size, size);
+      ctx.save();
+      ctx.translate(center, center);
+      ctx.rotate(rotation);
+
+      if (!items.length) {
+        ctx.beginPath();
+        ctx.arc(0, 0, radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(10, 24, 47, 0.92)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 157, 62, 0.16)';
+        ctx.lineWidth = 6;
+        ctx.stroke();
+        ctx.restore();
+        ctx.fillStyle = '#aeb9cc';
+        ctx.font = '700 30px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(emptyLabel, center, center - 100);
+        return;
+      }
+
+      const slice = (Math.PI * 2) / items.length;
+      items.forEach((item, i) => {
+        const start = i * slice;
+        const end = start + slice;
+
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, radius, start, end);
+        ctx.closePath();
+        const color = (colorOverrides && colorOverrides[i]) || WHEEL_PALETTE[i % WHEEL_PALETTE.length];
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+
+        // Label
+        ctx.save();
+        const labelAngle = start + slice / 2;
+        const readableAngle = Math.cos(labelAngle) < 0 ? labelAngle + Math.PI : labelAngle;
+        ctx.rotate(readableAngle);
+        ctx.textAlign = Math.cos(labelAngle) < 0 ? 'left' : 'right';
+        ctx.fillStyle = '#ffffff';
+        ctx.font = items.length > 8 ? '800 20px Inter, sans-serif' : '800 26px Inter, sans-serif';
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+        ctx.shadowBlur = 4;
+        const label = item.length > 18 ? item.slice(0, 17) + '...' : item;
+        ctx.fillText(label, Math.cos(labelAngle) < 0 ? -(radius - 30) : radius - 30, 8);
+        ctx.restore();
+      });
+
+      // Outer ring
+      ctx.beginPath();
+      ctx.arc(0, 0, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255, 181, 91, 0.9)';
+      ctx.lineWidth = 10;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function animateSpin(roleNames, memberNames, roleColors, done) {
+      const duration = 3500;
+      const start = performance.now();
+      const startRole = roleRotation;
+      const startMember = memberRotation;
+      const roleTarget = startRole + Math.PI * (7 + Math.random() * 4);
+      const memberTarget = startMember + Math.PI * (8 + Math.random() * 4);
+
+      const roleCanvas = document.getElementById('rw-role-canvas');
+      const memberCanvas = document.getElementById('rw-member-canvas');
+
+      function easeOutCubic(t) {
+        return 1 - Math.pow(1 - t, 3);
+      }
+
+      function frame(now) {
+        const progress = Math.min(1, (now - start) / duration);
+        const eased = easeOutCubic(progress);
+        roleRotation = startRole + (roleTarget - startRole) * eased;
+        memberRotation = startMember + (memberTarget - startMember) * eased;
+        drawWheel(roleCanvas, roleNames, roleRotation, 'No roles', roleColors);
+        drawWheel(memberCanvas, memberNames, memberRotation, 'No members');
+
+        if (progress < 1) {
+          requestAnimationFrame(frame);
+        } else {
+          done();
+        }
+      }
+
+      requestAnimationFrame(frame);
+    }
+
+    // ============================================
+    // 3. Shuffle helper
+    // ============================================
+    function shuffle(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    // ============================================
+    // 4. Assignment Logic
+    // ============================================
+    function createBalancedAssignments(roles, members) {
+      const shuffledRoles = shuffle(roles);
+      const shuffledMembers = shuffle(members);
+      const assignments = [];
+
+      // If more members than roles, some roles get multiple members
+      // If more roles than members, some members get multiple roles
+      // We assign round-robin style
+      const maxLen = Math.max(shuffledRoles.length, shuffledMembers.length);
+
+      for (let i = 0; i < maxLen; i++) {
+        const member = shuffledMembers[i % shuffledMembers.length];
+        const role = shuffledRoles[i % shuffledRoles.length];
+
+        assignments.push({
+          member_id: member.id,
+          role_id: role.id,
+          member_name: member.name,
+          role_name: role.name
+        });
+      }
+
+      return assignments;
+    }
+
+    // ============================================
+    // 5. Supabase Data Fetching
+    // ============================================
+    async function fetchWheelData() {
+      if (!supabaseClient) return;
+
+      try {
+        // Fetch roles, members, config, and active assignments in parallel
+        const [rolesRes, membersRes, configRes, assignmentsRes] = await Promise.all([
+          supabaseClient.from('wheel_roles').select('*').eq('is_active', true).order('created_at'),
+          supabaseClient.from('wheel_members').select('*').eq('is_active', true).order('created_at'),
+          supabaseClient.from('wheel_config').select('*').eq('id', 1).single(),
+          supabaseClient.from('wheel_assignments').select('*').eq('is_active', true).order('assigned_at', { ascending: false })
+        ]);
+
+        if (rolesRes.error) throw rolesRes.error;
+        if (membersRes.error) throw membersRes.error;
+        // Config might not exist yet
+        if (configRes.data) wheelConfig = configRes.data;
+        if (assignmentsRes.error) throw assignmentsRes.error;
+
+        wheelRoles = rolesRes.data || [];
+        wheelMembers = membersRes.data || [];
+
+        // Check if active assignments are expired
+        const now = new Date();
+        activeAssignments = (assignmentsRes.data || []).filter(a => new Date(a.expires_at) > now);
+
+        // If there are expired active assignments, deactivate them
+        const expiredIds = (assignmentsRes.data || [])
+          .filter(a => new Date(a.expires_at) <= now)
+          .map(a => a.id);
+
+        if (expiredIds.length > 0) {
+          await supabaseClient
+            .from('wheel_assignments')
+            .update({ is_active: false })
+            .in('id', expiredIds);
+        }
+      } catch (err) {
+        console.error('Error fetching wheel data:', err);
+      }
+    }
+
+    async function saveAssignments(assignments) {
+      if (!supabaseClient) return;
+
+      const durationDays = wheelConfig.assignment_duration_days || 7;
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
+
+      // Deactivate any existing active assignments
+      await supabaseClient
+        .from('wheel_assignments')
+        .update({ is_active: false })
+        .eq('is_active', true);
+
+      // Insert new assignments
+      const rows = assignments.map(a => ({
+        member_id: a.member_id,
+        role_id: a.role_id,
+        member_name: a.member_name,
+        role_name: a.role_name,
+        assigned_at: now.toISOString(),
+        expires_at: expiresAt.toISOString(),
+        is_active: true
+      }));
+
+      const { data, error } = await supabaseClient
+        .from('wheel_assignments')
+        .insert(rows)
+        .select();
+
+      if (error) throw error;
+
+      // Update config with last spin time
+      await supabaseClient
+        .from('wheel_config')
+        .update({ last_spin_at: now.toISOString(), updated_at: now.toISOString() })
+        .eq('id', 1);
+
+      activeAssignments = data || [];
+    }
+
+    // ============================================
+    // 6. UI Rendering
+    // ============================================
+    function renderWheels() {
+      const roleCanvas = document.getElementById('rw-role-canvas');
+      const memberCanvas = document.getElementById('rw-member-canvas');
+
+      const roleNames = wheelRoles.map(r => r.name);
+      const memberNames = wheelMembers.map(m => m.name);
+      const roleColors = wheelRoles.map((r, i) => r.color || WHEEL_PALETTE[i % WHEEL_PALETTE.length]);
+
+      document.getElementById('rw-role-count').textContent = roleNames.length;
+      document.getElementById('rw-member-count').textContent = memberNames.length;
+
+      drawWheel(roleCanvas, roleNames, roleRotation, 'No roles yet', roleColors);
+      drawWheel(memberCanvas, memberNames, memberRotation, 'No members yet');
+    }
+
+    function renderAssignments() {
+      const list = document.getElementById('rw-assignment-list');
+      const myRole = document.getElementById('rw-my-role');
+      const myRoleName = document.getElementById('rw-my-role-name');
+      const myRoleExpiry = document.getElementById('rw-my-role-expiry');
+
+      if (activeAssignments.length === 0) {
+        list.innerHTML = '<p class="rw-empty">Spin the wheel to create assignments.</p>';
+        myRole.classList.remove('visible');
+        return;
+      }
+
+      // Find the current user's assignment
+      let userAssignment = null;
+      if (currentMember) {
+        userAssignment = activeAssignments.find(a => a.member_id === currentMember.id);
+      }
+
+      // Show My Role card
+      if (userAssignment) {
+        myRole.classList.add('visible');
+        myRoleName.textContent = userAssignment.role_name;
+        const daysLeft = getDaysLeft(userAssignment.expires_at);
+        myRoleExpiry.textContent = `Expires in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`;
+      } else {
+        myRole.classList.remove('visible');
+      }
+
+      // Render all assignments
+      list.innerHTML = '';
+      activeAssignments.forEach(a => {
+        const card = document.createElement('div');
+        card.className = 'rw-assignment-card';
+        if (currentMember && a.member_id === currentMember.id) {
+          card.classList.add('rw-highlight');
+        }
+
+        const isYou = currentMember && a.member_id === currentMember.id;
+
+        card.innerHTML = `
+          <div class="rw-assignment-member">
+            ${escapeHTML(a.member_name)}
+            ${isYou ? '<span class="rw-you-badge">YOU</span>' : ''}
+          </div>
+          <div class="rw-assignment-role">${escapeHTML(a.role_name)}</div>
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    function updateSpinControls() {
+      const spinBtn = document.getElementById('rw-spin-btn');
+      const spinBtnText = document.getElementById('rw-spin-btn-text');
+      const spinHint = document.getElementById('rw-spin-hint');
+      const lockBanner = document.getElementById('rw-lock-banner');
+      const daysLeftEl = document.getElementById('rw-days-left');
+      const pairCount = document.getElementById('rw-pair-count');
+      const durationDays = document.getElementById('rw-duration-days');
+      const statusText = document.getElementById('rw-status-text');
+      const statusSub = document.getElementById('rw-status-sub');
+
+      durationDays.textContent = wheelConfig.assignment_duration_days || 7;
+
+      if (wheelRoles.length === 0 || wheelMembers.length === 0) {
+        spinBtn.disabled = true;
+        spinBtnText.textContent = 'Waiting for Admin';
+        spinHint.textContent = 'The admin has not added roles or members yet. Ask your admin to set up the wheel in Supabase.';
+        lockBanner.classList.remove('visible');
+        statusText.textContent = 'Pending';
+        statusSub.textContent = 'Admin setup required';
+        return;
+      }
+
+      if (!wheelConfig.allow_spin) {
+        spinBtn.disabled = true;
+        spinBtnText.textContent = 'Spinning Disabled';
+        spinHint.textContent = 'The admin has temporarily disabled spinning.';
+        lockBanner.classList.remove('visible');
+        statusText.textContent = 'Paused';
+        statusSub.textContent = 'Admin disabled spinning';
+        return;
+      }
+
+      if (activeAssignments.length > 0) {
+        // Locked — assignments are active
+        const firstExpiry = activeAssignments[0]?.expires_at;
+        const daysLeft = getDaysLeft(firstExpiry);
+
+        spinBtn.disabled = true;
+        spinBtnText.textContent = 'Locked — Roles Assigned';
+        spinHint.textContent = `Current roles are locked for ${daysLeft} more day${daysLeft === 1 ? '' : 's'}. The wheel will unlock automatically when the period expires.`;
+
+        lockBanner.classList.add('visible');
+        daysLeftEl.textContent = `${daysLeft} day${daysLeft === 1 ? '' : 's'}`;
+
+        pairCount.textContent = activeAssignments.length;
+        statusText.textContent = 'Active';
+        statusSub.textContent = `${daysLeft}d remaining`;
+      } else {
+        // Ready to spin
+        spinBtn.disabled = false;
+        spinBtnText.textContent = 'Spin Wheels';
+        spinHint.textContent = `Roles and members are set by the admin. The spin assigns each member a role, locked for ${wheelConfig.assignment_duration_days || 7} days.`;
+
+        lockBanner.classList.remove('visible');
+        pairCount.textContent = '0';
+        statusText.textContent = 'Ready';
+        statusSub.textContent = 'Spin to assign roles';
+      }
+    }
+
+    function getDaysLeft(expiresAt) {
+      const remaining = Math.max(0, new Date(expiresAt).getTime() - Date.now());
+      return Math.ceil(remaining / (24 * 60 * 60 * 1000));
+    }
+
+    function escapeHTML(str) {
+      const div = document.createElement('div');
+      div.textContent = String(str || '');
+      return div.innerHTML;
+    }
+
+    // ============================================
+    // 7. Auth & User Detection
+    // ============================================
+    async function detectUser() {
+      if (!supabaseClient) return;
+
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+
+        if (session && session.user) {
+          currentUser = session.user;
+          const email = currentUser.email;
+          const name = currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || email.split('@')[0];
+
+          // Show identity
+          document.getElementById('rw-identity').style.display = 'flex';
+          document.getElementById('rw-user-name').textContent = name;
+          document.getElementById('rw-user-email').textContent = `(${email})`;
+          document.getElementById('rw-login-prompt').style.display = 'none';
+          document.getElementById('rw-main').style.display = 'block';
+
+          // Match to wheel member by email
+          currentMember = wheelMembers.find(m => m.email && m.email.toLowerCase() === email.toLowerCase());
+
+          // If no email match, try name match
+          if (!currentMember) {
+            currentMember = wheelMembers.find(m => m.name.toLowerCase() === name.toLowerCase());
+          }
+
+          // Update login/logout button
+          const loginBtn = document.getElementById('login-nav-btn');
+          if (loginBtn) {
+            loginBtn.textContent = 'Logout';
+            loginBtn.href = '#';
+            loginBtn.onclick = async (e) => {
+              e.preventDefault();
+              await supabaseClient.auth.signOut();
+              window.location.reload();
+            };
+          }
+        } else {
+          // Not logged in
+          document.getElementById('rw-identity').style.display = 'none';
+          document.getElementById('rw-login-prompt').style.display = 'block';
+          document.getElementById('rw-main').style.display = 'none';
+        }
+      } catch (err) {
+        console.error('Auth detection error:', err);
+      }
+    }
+
+    // ============================================
+    // 8. Spin Handler
+    // ============================================
+    async function handleSpin() {
+      if (isSpinning || activeAssignments.length > 0) return;
+      if (wheelRoles.length === 0 || wheelMembers.length === 0) return;
+
+      isSpinning = true;
+      const spinBtn = document.getElementById('rw-spin-btn');
+      const spinBtnText = document.getElementById('rw-spin-btn-text');
+      spinBtn.disabled = true;
+      spinBtnText.textContent = 'Spinning...';
+
+      const roleNames = wheelRoles.map(r => r.name);
+      const memberNames = wheelMembers.map(m => m.name);
+      const roleColors = wheelRoles.map((r, i) => r.color || WHEEL_PALETTE[i % WHEEL_PALETTE.length]);
+
+      // Animate
+      animateSpin(roleNames, memberNames, roleColors, async () => {
+        try {
+          // Create assignments
+          const assignments = createBalancedAssignments(wheelRoles, wheelMembers);
+
+          // Save to Supabase
+          await saveAssignments(assignments);
+
+          // Re-render
+          renderAssignments();
+          updateSpinControls();
+        } catch (err) {
+          console.error('Error saving assignments:', err);
+          alert('Failed to save assignments. Please check your Supabase setup and try again.');
+        } finally {
+          isSpinning = false;
+        }
+      });
+    }
+
+    // ============================================
+    // 9. Navbar & Scroll
+    // ============================================
+    function initNavbar() {
+      const navbar = document.querySelector('.navbar');
+      if (!navbar) return;
+
+      const handleScroll = () => {
+        navbar.classList.toggle('scrolled', window.scrollY > 40);
+      };
+      handleScroll();
+      window.addEventListener('scroll', handleScroll, { passive: true });
+
+      // Mobile menu toggle
+      const navToggle = document.getElementById('nav-toggle-btn');
+      const navMenu = document.getElementById('nav-menu-list');
+      if (navToggle && navMenu) {
+        navToggle.addEventListener('click', () => {
+          const isExpanded = navToggle.getAttribute('aria-expanded') === 'true';
+          navToggle.classList.toggle('active');
+          navMenu.classList.toggle('active');
+          navToggle.setAttribute('aria-expanded', !isExpanded);
+          navMenu.setAttribute('aria-hidden', isExpanded);
+          document.body.style.overflow = isExpanded ? '' : 'hidden';
+          const icon = navToggle.querySelector('i');
+          if (icon) {
+            icon.setAttribute('data-lucide', isExpanded ? 'menu' : 'x');
+            if (window.lucide) lucide.createIcons();
+          }
+        });
+      }
+    }
+
+    // ============================================
+    // 10. Initialization
+    // ============================================
+    document.addEventListener('DOMContentLoaded', async () => {
+      initNavbar();
+      if (window.lucide) lucide.createIcons();
+
+      if (!supabaseClient) {
+        document.getElementById('rw-loading').innerHTML = '<span style="color:#f87171;">Supabase SDK not loaded. Please check your internet connection.</span>';
+        return;
+      }
+
+      // Fetch data first so detectUser can match members
+      await fetchWheelData();
+
+      // Detect user
+      await detectUser();
+
+      // If user is logged in, render everything
+      if (currentUser) {
+        document.getElementById('rw-loading').style.display = 'none';
+        document.getElementById('rw-wheels-container').style.display = 'block';
+        renderWheels();
+        renderAssignments();
+        updateSpinControls();
+      }
+
+      // Bind spin button
+      document.getElementById('rw-spin-btn').addEventListener('click', handleSpin);
+
+      // Listen for auth changes (login/logout persistence)
+      supabaseClient.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          await fetchWheelData();
+          await detectUser();
+          if (currentUser) {
+            document.getElementById('rw-loading').style.display = 'none';
+            document.getElementById('rw-wheels-container').style.display = 'block';
+            renderWheels();
+            renderAssignments();
+            updateSpinControls();
+          }
+        } else if (event === 'SIGNED_OUT') {
+          currentUser = null;
+          currentMember = null;
+          document.getElementById('rw-identity').style.display = 'none';
+          document.getElementById('rw-login-prompt').style.display = 'block';
+          document.getElementById('rw-main').style.display = 'none';
+        }
+      });
+
+      if (window.lucide) lucide.createIcons();
+    });
+  </script>
+
+</body>
+</html>

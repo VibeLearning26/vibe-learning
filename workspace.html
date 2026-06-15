@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VIBE LEARNING Workspace — DoubtHub</title>
+  
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💼</text></svg>">
+  <link rel="stylesheet" href="style.css?v=20260616-clay">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    /* Scoped App Styles mapping to DoubtHub Theme */
+    .app { display: flex; height: 100vh; min-height: 600px; font-size: 14px; background: var(--bg-dark); color: var(--text-white); padding-top: 80px;}
+    .sidebar { width: 240px; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); border-right: 1px solid var(--border-glass); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; z-index: 10; }
+    .sidebar-section { padding: 12px 8px 4px; }
+    .sidebar-label { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; padding: 0 8px 6px; }
+    .nav-item-ws { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; cursor: pointer; color: var(--text-gray); font-size: 13px; font-weight: 500; transition: var(--transition-fast); margin-bottom: 4px;}
+    .nav-item-ws:hover { background: rgba(255, 255, 255, 0.05); color: var(--text-white); }
+    .nav-item-ws.active { background: rgba(56, 189, 248, 0.1); color: var(--accent-blue); box-shadow: inset 2px 0 0 var(--accent-blue); }
+    .nav-item-ws i { width: 16px; height: 16px; }
+    .team-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 8px currentColor; }
+    
+    .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; position: relative; }
+    .topbar { padding: 12px 24px; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border-glass); display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 5;}
+    .topbar-title { font-size: 18px; font-weight: 600; font-family: var(--font-heading); color: var(--text-white); flex: 1; }
+    .search-box { display: flex; align-items: center; gap: 8px; background: rgba(30, 41, 59, 0.6); border: 1px solid var(--border-glass); border-radius: 8px; padding: 8px 12px; font-size: 13px; color: var(--text-gray); width: 220px; transition: var(--transition-fast); }
+    .search-box:focus-within { border-color: var(--accent-blue); box-shadow: 0 0 10px rgba(56, 189, 248, 0.2); }
+    
+    .content { padding: 24px; flex: 1; }
+    .page { display: none; animation: fadeIn 0.3s ease; }
+    .page.active { display: block; }
+    
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .stat-card { padding: 16px; border-radius: 12px; display: flex; flex-direction: column; }
+    .stat-label { font-size: 12px; color: var(--text-gray); margin-bottom: 8px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat-value { font-size: 28px; font-weight: 700; font-family: var(--font-heading); color: var(--text-white); }
+    .stat-sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+    
+    .section-title { font-size: 15px; font-weight: 600; font-family: var(--font-heading); color: var(--text-white); margin-bottom: 16px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+    
+    .card-title { font-size: 15px; font-weight: 600; font-family: var(--font-heading); color: var(--text-white); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border-glass); padding-bottom: 12px;}
+    
+    .org-chart { font-size: 13px; }
+    .org-node { display: flex; align-items: center; gap: 8px; padding: 6px 0; color: var(--text-gray); cursor: pointer; transition: var(--transition-fast);}
+    .org-node:hover { color: var(--text-white); }
+    .org-node.lead { color: var(--text-white); font-weight: 600; }
+    .org-indent1 { padding-left: 20px; border-left: 1px solid rgba(255,255,255,0.05); margin-left: 10px;}
+    .org-indent2 { padding-left: 20px; border-left: 1px solid rgba(255,255,255,0.05); margin-left: 10px;}
+    .org-line { width: 16px; height: 1px; background: rgba(255,255,255,0.1); margin-right: 4px;}
+    
+    .activity-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; box-shadow: 0 0 10px currentColor; }
+    .activity-text { font-size: 13px; color: var(--text-gray); line-height: 1.5; }
+    .activity-time { font-size: 11px; color: var(--text-muted); margin-top: 2px;}
+    
+    .teams-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+    .team-card { padding: 20px; cursor: pointer; display: flex; flex-direction: column;}
+    .team-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .team-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .team-name { font-size: 15px; font-weight: 600; color: var(--text-white); font-family: var(--font-heading);}
+    .team-lead { font-size: 12px; color: var(--text-gray); margin-bottom: 12px; flex: 1; }
+    
+    .progress-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; margin-bottom: 10px; }
+    .progress-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
+    
+    .team-stats { display: flex; gap: 16px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 12px; margin-top: auto;}
+    .team-stat { font-size: 11px; color: var(--text-muted); display: flex; flex-direction: column;}
+    .team-stat span { color: var(--text-white); font-weight: 600; font-size: 13px;}
+    
+    .workspace { display: none; animation: fadeIn 0.3s ease; }
+    .workspace.active { display: block; }
+    .ws-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+    .ws-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .ws-info h2 { font-size: 24px; font-weight: 700; color: var(--text-white); margin-bottom: 4px; }
+    .ws-info p { font-size: 14px; color: var(--text-gray); }
+    .ws-meta { display: flex; gap: 20px; margin-bottom: 24px; }
+    .ws-meta-item { font-size: 13px; color: var(--text-gray); display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 100px; }
+    .ws-meta-item i { width: 14px; height: 14px; }
+    
+    .kanban { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; overflow-x: auto; padding-bottom: 10px; }
+    .kanban-col { background: rgba(30, 41, 59, 0.4); border: 1px solid var(--border-glass); border-radius: 12px; padding: 16px; min-height: 400px; }
+    .kanban-col-header { font-size: 13px; font-weight: 600; color: var(--text-gray); margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; text-transform: uppercase; letter-spacing: 0.05em; }
+    .kanban-count { background: rgba(255,255,255,0.1); border-radius: 10px; padding: 2px 8px; font-size: 11px; color: var(--text-white); }
+    
+    .task-card { background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border-glass); border-radius: 10px; padding: 14px; margin-bottom: 12px; cursor: grab; transition: var(--transition-fast); }
+    .task-card:hover { border-color: var(--accent-blue); transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+    .task-name { font-size: 13px; font-weight: 600; color: var(--text-white); margin-bottom: 6px; }
+    .task-desc { font-size: 12px; color: var(--text-gray); margin-bottom: 12px; line-height: 1.4; }
+    .task-footer { display: flex; align-items: center; justify-content: space-between; }
+    
+    .priority-badge { font-size: 10px; padding: 3px 8px; border-radius: 100px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .priority-low { background: rgba(56, 189, 248, 0.15); color: var(--accent-blue); }
+    .priority-med { background: rgba(250, 204, 21, 0.15); color: #facc15; }
+    .priority-high { background: rgba(249, 115, 22, 0.15); color: #f97316; }
+    .priority-crit { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+    
+    .assignee { width: 24px; height: 24px; border-radius: 50%; background: var(--accent-purple); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: #fff; }
+    .deadline { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 4px;}
+    .deadline i { width: 12px; height: 12px; }
+    
+    .members-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+    .member-card { text-align: center; padding: 24px; }
+    .member-avatar { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 600; margin: 0 auto 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+    .member-name { font-size: 16px; font-weight: 600; font-family: var(--font-heading); color: var(--text-white); }
+    .member-role { font-size: 12px; color: var(--accent-blue); margin-bottom: 12px; }
+    .member-team { font-size: 11px; padding: 4px 10px; border-radius: 100px; background: rgba(255,255,255,0.05); color: var(--text-gray); display: inline-block; margin-bottom: 16px; }
+    .member-scores { display: flex; justify-content: center; gap: 20px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 16px; }
+    .member-score { text-align: center; }
+    .member-score-val { font-size: 16px; font-weight: 600; color: var(--text-white); }
+    .member-score-lbl { font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
+    
+    .filter-bar { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+    .filter-btn { font-size: 13px; padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border-glass); background: rgba(30, 41, 59, 0.5); color: var(--text-gray); cursor: pointer; font-family: var(--font-heading); font-weight: 500; transition: var(--transition-fast); }
+    .filter-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-white); }
+    .filter-btn.active { background: rgba(56, 189, 248, 0.15); color: var(--accent-blue); border-color: rgba(56, 189, 248, 0.4); box-shadow: 0 0 15px rgba(56, 189, 248, 0.1); }
+    
+    .analytics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+    .chart-placeholder { height: 200px; display: flex; align-items: flex-end; gap: 8px; padding: 16px 12px 0; border-bottom: 1px solid var(--border-glass); margin-bottom: 8px;}
+    .bar { flex: 1; border-radius: 4px 4px 0 0; background: var(--accent-blue); opacity: 0.7; transition: var(--transition-fast); cursor: pointer; position: relative; }
+    .bar:hover { opacity: 1; box-shadow: 0 0 15px currentColor; }
+    .chart-labels { display: flex; gap: 8px; margin-top: 8px; }
+    .chart-label { flex: 1; font-size: 10px; color: var(--text-muted); text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 2000; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+    .modal { background: var(--bg-dark); border-radius: 16px; padding: 32px; width: 480px; max-width: 90vw; border: 1px solid var(--border-neon-purple); box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+    .modal h3 { font-size: 20px; font-weight: 600; font-family: var(--font-heading); margin-bottom: 24px; color: var(--text-white); display: flex; align-items: center; gap: 10px;}
+    
+    .form-row { margin-bottom: 16px; }
+    .form-row label { font-size: 13px; font-weight: 500; color: var(--text-gray); display: block; margin-bottom: 8px; }
+    .form-row input, .form-row select, .form-row textarea { width: 100%; padding: 10px 14px; border: 1px solid var(--border-glass); border-radius: 8px; font-size: 14px; font-family: var(--font-body); background: rgba(30, 41, 59, 0.5); color: var(--text-white); transition: var(--transition-fast); }
+    .form-row input:focus, .form-row select:focus, .form-row textarea:focus { border-color: var(--accent-purple); outline: none; box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2); }
+    .form-row textarea { resize: vertical; min-height: 80px; }
+    .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-glass); }
+    
+    /* Ensure tooltips are readable */
+    .bar[title]:hover::after { content: attr(title); position: absolute; top: -30px; left: 50%; transform: translateX(-50%); background: var(--bg-dark); color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 11px; white-space: nowrap; pointer-events: none; border: 1px solid var(--border-glass); z-index: 10;}
+  </style>
+</head>
+<body class="clay-page workspace-page">
+
+  <!-- ==========================================
+       BACKGROUND DYNAMIC ELEMENTS
+       ========================================== -->
+  <div class="bg-blobs" aria-hidden="true">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <!-- ==========================================
+       NAVIGATION BAR
+       ========================================== -->
+  <nav class="navbar" id="navbar" aria-label="Main Navigation">
+    <div class="container nav-container">
+      <a href="index.html" class="logo-link" id="logo-nav">
+        <i data-lucide="help-circle" class="logo-icon" aria-hidden="true"></i>
+        <span class="logo-text">Doubt<span>Hub</span></span>
+      </a>
+
+      <button class="nav-toggle" id="nav-toggle-btn" aria-label="Toggle navigation menu" aria-expanded="false"
+        aria-controls="nav-menu-list">
+        <i data-lucide="menu" aria-hidden="true"></i>
+      </button>
+
+      <ul class="nav-menu" id="nav-menu-list" aria-hidden="true">
+        <li class="nav-item"><a href="index.html">Home</a></li>
+        <li class="nav-item"><a href="Project_manager.html">Project Manager</a></li>
+        <li class="nav-item"><a href="submit.html">Submit Project</a></li>
+        <li class="nav-item"><a href="index.html#future-scope">Future Scope</a></li>
+        <li class="nav-item"><a href="index.html#contact">Contact</a></li>
+        <li class="nav-item">
+          <a href="auth.html" class="btn btn-primary nav-btn" id="login-nav-btn">Login</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ==========================================
+       WORKSPACE APP CONTAINER
+       ========================================== -->
+<div class="app">
+  <div class="sidebar glass-panel">
+    <div class="sidebar-section" style="padding-top: 20px;">
+      <div class="nav-item-ws active" onclick="showPage('dashboard')"><i data-lucide="layout-dashboard"></i> Dashboard</div>
+      <div class="nav-item-ws" onclick="showPage('teams')"><i data-lucide="users"></i> Teams</div>
+      <div class="nav-item-ws" onclick="showPage('members')"><i data-lucide="user-circle"></i> Members</div>
+      <div class="nav-item-ws" onclick="showPage('analytics')"><i data-lucide="bar-chart-3"></i> Analytics</div>
+    </div>
+    <div class="sidebar-section" style="margin-top: 20px;">
+      <div class="sidebar-label">Team Spaces</div>
+      <div class="nav-item-ws" onclick="openTeam(0)"><span class="team-dot" style="color: #38bdf8"></span> Problem Discovery</div>
+      <div class="nav-item-ws" onclick="openTeam(1)"><span class="team-dot" style="color: #10b981"></span> Solution Design</div>
+      <div class="nav-item-ws" onclick="openTeam(2)"><span class="team-dot" style="color: #f97316"></span> Development</div>
+      <div class="nav-item-ws" onclick="openTeam(3)"><span class="team-dot" style="color: #ec4899"></span> Debugging & Testing</div>
+      <div class="nav-item-ws" onclick="openTeam(4)"><span class="team-dot" style="color: #3b82f6"></span> Research</div>
+      <div class="nav-item-ws" onclick="openTeam(5)"><span class="team-dot" style="color: #84cc16"></span> Documentation</div>
+      <div class="nav-item-ws" onclick="openTeam(6)"><span class="team-dot" style="color: #eab308"></span> Innovation & Hackathon</div>
+      <div class="nav-item-ws" onclick="openTeam(7)"><span class="team-dot" style="color: #a8a29e"></span> Project Management</div>
+      <div class="nav-item-ws" onclick="openTeam(8)"><span class="team-dot" style="color: #f43f5e"></span> Presentation & Outreach</div>
+      <div class="nav-item-ws" onclick="openTeam(9)"><span class="team-dot" style="color: #a855f7"></span> Industry & Career</div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="page-title">Dashboard</div>
+      <div class="search-box"><i data-lucide="search" style="width: 16px; height: 16px;"></i> <input type="text" placeholder="Search…" style="background:transparent; border:none; color:inherit; outline:none; font-family:inherit;"></div>
+      <button class="btn btn-primary" style="padding: 8px 16px; font-size: 13px;" onclick="openModal()"><i data-lucide="plus"></i> New Task</button>
+    </div>
+
+    <div class="content">
+      <!-- DASHBOARD PAGE -->
+      <div class="page active" id="page-dashboard">
+        <div class="stats-grid">
+          <div class="stat-card glass-panel"><div class="stat-label">Total Members</div><div class="stat-value text-gradient-blue">42</div><div class="stat-sub">across 10 teams</div></div>
+          <div class="stat-card glass-panel"><div class="stat-label">Total Teams</div><div class="stat-value text-gradient-purple">10</div><div class="stat-sub">3 sub-leads</div></div>
+          <div class="stat-card glass-panel"><div class="stat-label">Active Projects</div><div class="stat-value text-gradient-blue">8</div><div class="stat-sub">2 near deadline</div></div>
+          <div class="stat-card glass-panel"><div class="stat-label">Pending Tasks</div><div class="stat-value" style="color: #f97316">31</div><div class="stat-sub">6 critical</div></div>
+          <div class="stat-card glass-panel"><div class="stat-label">Completed</div><div class="stat-value" style="color: #10b981">127</div><div class="stat-sub">this month</div></div>
+          <div class="stat-card glass-panel"><div class="stat-label">Productivity</div><div class="stat-value text-gradient-purple">84%</div><div class="stat-sub">↑ 6% this week</div></div>
+        </div>
+
+        <div class="grid-2">
+          <div class="glass-panel" style="padding: 24px; border-radius: 16px;">
+            <div class="card-title"><i data-lucide="network" style="color:var(--accent-blue)"></i> Organization chart</div>
+            <div class="org-chart">
+              <div class="org-node lead"><i data-lucide="crown" style="width: 16px; height: 16px; color:#eab308"></i> Program Lead</div>
+              <div class="org-indent1">
+                <div class="org-node" onclick="filterByLead('Innovation')"><span class="team-dot" style="color:#a855f7"></span> Innovation Lead</div>
+                <div class="org-indent2">
+                  <div class="org-node" onclick="openTeam(0)"><div class="org-line"></div> Problem Discovery</div>
+                  <div class="org-node" onclick="openTeam(1)"><div class="org-line"></div> Solution Design</div>
+                </div>
+                <div class="org-node" onclick="filterByLead('Engineering')"><span class="team-dot" style="color:#f97316"></span> Engineering Lead</div>
+                <div class="org-indent2">
+                  <div class="org-node" onclick="openTeam(2)"><div class="org-line"></div> Development</div>
+                  <div class="org-node" onclick="openTeam(3)"><div class="org-line"></div> Debugging & Testing</div>
+                </div>
+                <div class="org-node" onclick="filterByLead('Growth')"><span class="team-dot" style="color:#38bdf8"></span> Growth & Outreach Lead</div>
+                <div class="org-indent2">
+                  <div class="org-node" onclick="openTeam(4)"><div class="org-line"></div> Research</div>
+                  <div class="org-node" onclick="openTeam(5)"><div class="org-line"></div> Documentation</div>
+                  <div class="org-node" onclick="openTeam(6)"><div class="org-line"></div> Innovation & Hackathon</div>
+                  <div class="org-node" onclick="openTeam(7)"><div class="org-line"></div> Project Management</div>
+                  <div class="org-node" onclick="openTeam(8)"><div class="org-line"></div> Presentation & Outreach</div>
+                  <div class="org-node" onclick="openTeam(9)"><div class="org-line"></div> Industry & Career</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="glass-panel" style="padding: 24px; border-radius: 16px;">
+            <div class="card-title"><i data-lucide="activity" style="color:var(--accent-purple)"></i> Recent activity</div>
+            <div id="activity-feed">
+              <div class="activity-item"><div class="activity-dot" style="color:#10b981"></div><div><div class="activity-text">UI wireframes task marked complete by Priya S.</div><div class="activity-time">2 min ago</div></div></div>
+              <div class="activity-item"><div class="activity-dot" style="color:#a855f7"></div><div><div class="activity-text">New task "User pain point analysis" added to Problem Discovery</div><div class="activity-time">18 min ago</div></div></div>
+              <div class="activity-item"><div class="activity-dot" style="color:#f97316"></div><div><div class="activity-text">Sprint 3 started — Development team</div><div class="activity-time">1 hr ago</div></div></div>
+              <div class="activity-item"><div class="activity-dot" style="color:#eab308"></div><div><div class="activity-text">Hackathon brief published by Innovation lead</div><div class="activity-time">3 hr ago</div></div></div>
+              <div class="activity-item"><div class="activity-dot" style="color:#ec4899"></div><div><div class="activity-text">Bug #42 escalated to Critical in Debugging team</div><div class="activity-time">Yesterday</div></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title">All teams — click to open workspace</div>
+        <div class="teams-grid" id="dashboard-teams"></div>
+      </div>
+
+      <!-- TEAMS PAGE -->
+      <div class="page" id="page-teams">
+        <div class="filter-bar" id="teams-filter">
+          <button class="filter-btn active" onclick="filterTeams('all', this)">All leads</button>
+          <button class="filter-btn" onclick="filterTeams('Innovation', this)">Innovation</button>
+          <button class="filter-btn" onclick="filterTeams('Engineering', this)">Engineering</button>
+          <button class="filter-btn" onclick="filterTeams('Growth', this)">Growth & Outreach</button>
+        </div>
+        <div class="teams-grid" id="all-teams-grid"></div>
+
+        <!-- Team workspace view -->
+        <div class="workspace" id="team-workspace">
+          <div style="margin-bottom:24px">
+            <button class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px;" onclick="closeWorkspace()"><i data-lucide="arrow-left"></i> All teams</button>
+          </div>
+          <div class="ws-header">
+            <div class="ws-icon" id="ws-icon"></div>
+            <div class="ws-info">
+              <h2 id="ws-name"></h2>
+              <p id="ws-desc"></p>
+            </div>
+          </div>
+          <div class="ws-meta">
+            <div class="ws-meta-item"><i data-lucide="user"></i> <span id="ws-lead"></span></div>
+            <div class="ws-meta-item"><i data-lucide="users"></i> <span id="ws-members"></span></div>
+            <div class="ws-meta-item"><i data-lucide="flag"></i> <span id="ws-objective"></span></div>
+          </div>
+          <div class="glass-panel" style="padding: 24px; border-radius: 16px;">
+            <div class="card-title"><i data-lucide="trello" style="color:var(--accent-blue)"></i> Task board</div>
+            <div class="kanban" id="kanban-board"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MEMBERS PAGE -->
+      <div class="page" id="page-members">
+        <div class="filter-bar">
+          <button class="filter-btn active">All teams</button>
+          <button class="filter-btn">Innovation</button>
+          <button class="filter-btn">Engineering</button>
+          <button class="filter-btn">Growth</button>
+        </div>
+        <div class="members-grid" id="members-grid"></div>
+      </div>
+
+      <!-- ANALYTICS PAGE -->
+      <div class="page" id="page-analytics">
+        <div class="stats-grid" style="margin-bottom:32px">
+          <div class="stat-card glass-panel"><div class="stat-label">Avg completion rate</div><div class="stat-value text-gradient-blue">78%</div></div>
+          <div class="stat-card glass-panel"><div class="stat-label">Tasks this week</div><div class="stat-value text-gradient-purple">23</div></div>
+          <div class="stat-card glass-panel"><div class="stat-label">Overdue tasks</div><div class="stat-value" style="color: #ef4444">4</div></div>
+          <div class="stat-card glass-panel"><div class="stat-label">Top contributor</div><div class="stat-value" style="font-size:20px">Arjun R.</div></div>
+        </div>
+        <div class="analytics-grid">
+          <div class="glass-panel" style="padding: 24px; border-radius: 16px;">
+            <div class="card-title"><i data-lucide="bar-chart-3" style="color:var(--accent-blue)"></i> Team task completion</div>
+            <div class="chart-placeholder" id="completion-chart"></div>
+            <div class="chart-labels" id="completion-labels"></div>
+          </div>
+          <div class="glass-panel" style="padding: 24px; border-radius: 16px;">
+            <div class="card-title"><i data-lucide="trending-up" style="color:var(--accent-purple)"></i> Weekly productivity</div>
+            <div class="chart-placeholder" id="weekly-chart"></div>
+            <div class="chart-labels"><div class="chart-label" style="flex:1">Mon</div><div class="chart-label" style="flex:1">Tue</div><div class="chart-label" style="flex:1">Wed</div><div class="chart-label" style="flex:1">Thu</div><div class="chart-label" style="flex:1">Fri</div></div>
+          </div>
+          <div class="glass-panel" style="padding: 24px; border-radius: 16px;">
+            <div class="card-title"><i data-lucide="flag" style="color:var(--accent-blue)"></i> Tasks by priority</div>
+            <div style="display:flex;flex-direction:column;gap:12px;margin-top:16px">
+              <div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span style="color:var(--text-gray)">Critical</span><span style="color:var(--text-white)">6</span></div><div class="progress-bar"><div class="progress-fill" style="width:25%;background:#ef4444"></div></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span style="color:var(--text-gray)">High</span><span style="color:var(--text-white)">11</span></div><div class="progress-bar"><div class="progress-fill" style="width:46%;background:#f97316"></div></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span style="color:var(--text-gray)">Medium</span><span style="color:var(--text-white)">9</span></div><div class="progress-bar"><div class="progress-fill" style="width:37%;background:#eab308"></div></div></div>
+              <div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span style="color:var(--text-gray)">Low</span><span style="color:var(--text-white)">5</span></div><div class="progress-bar"><div class="progress-fill" style="width:21%;background:#38bdf8"></div></div></div>
+            </div>
+          </div>
+          <div class="glass-panel" style="padding: 24px; border-radius: 16px;">
+            <div class="card-title"><i data-lucide="award" style="color:var(--accent-purple)"></i> Top contributors</div>
+            <div id="top-contributors" style="display:flex;flex-direction:column;gap:12px;margin-top:16px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- New Task Modal -->
+<div class="modal-overlay" id="task-modal">
+  <div class="modal">
+    <h3><i data-lucide="plus" style="color:var(--accent-blue)"></i> Create new task</h3>
+    <div class="form-row"><label>Task name</label><input type="text" placeholder="Enter task name…"></div>
+    <div class="form-row"><label>Description</label><textarea placeholder="What needs to be done?"></textarea></div>
+    <div class="form-row"><label>Team</label>
+      <select>
+        <option>Problem Discovery</option><option>Solution Design</option><option>Development</option>
+        <option>Debugging & Testing</option><option>Research</option><option>Documentation</option>
+        <option>Innovation & Hackathon</option><option>Project Management</option>
+        <option>Presentation & Outreach</option><option>Industry & Career</option>
+      </select>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="form-row"><label>Priority</label>
+        <select><option>Low</option><option>Medium</option><option selected>High</option><option>Critical</option></select>
+      </div>
+      <div class="form-row"><label>Deadline</label><input type="date"></div>
+    </div>
+    <div class="form-row"><label>Assign to</label><input type="text" placeholder="Member name…"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal()"><i data-lucide="check"></i> Create task</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const TEAMS = [
+  { name: "Problem Discovery", lead: "Innovation Lead", color: "#38bdf8", bg: "rgba(56, 189, 248, 0.15)", emoji: "🔍", members: 4, tasks: 8, done: 12, progress: 60, objective: "Identify user pain points", desc: "Uncovers real-world problems through research and stakeholder interviews." },
+  { name: "Solution Design", lead: "Innovation Lead", color: "#10b981", bg: "rgba(16, 185, 129, 0.15)", emoji: "✏️", members: 5, tasks: 6, done: 9, progress: 72, objective: "Design validated solutions", desc: "Creates wireframes, prototypes and solution blueprints." },
+  { name: "Development", lead: "Engineering Lead", color: "#f97316", bg: "rgba(249, 115, 22, 0.15)", emoji: "⚙️", members: 7, tasks: 11, done: 22, progress: 55, objective: "Build core product features", desc: "Develops and ships product features across frontend and backend." },
+  { name: "Debugging & Testing", lead: "Engineering Lead", color: "#ec4899", bg: "rgba(236, 72, 153, 0.15)", emoji: "🐛", members: 3, tasks: 5, done: 18, progress: 80, objective: "Zero critical bugs", desc: "Ensures product quality through systematic testing and bug resolution." },
+  { name: "Research", lead: "Growth & Outreach Lead", color: "#3b82f6", bg: "rgba(59, 130, 246, 0.15)", emoji: "📚", members: 4, tasks: 7, done: 14, progress: 65, objective: "Market & user insights", desc: "Conducts market research, competitive analysis and user studies." },
+  { name: "Documentation", lead: "Growth & Outreach Lead", color: "#84cc16", bg: "rgba(132, 204, 22, 0.15)", emoji: "📝", members: 3, tasks: 4, done: 20, progress: 88, objective: "Complete project docs", desc: "Maintains technical documentation, reports and knowledge base." },
+  { name: "Innovation & Hackathon", lead: "Growth & Outreach Lead", color: "#eab308", bg: "rgba(234, 179, 8, 0.15)", emoji: "🚀", members: 5, tasks: 9, done: 7, progress: 40, objective: "Win 2 hackathons", desc: "Drives creative ideation, runs hackathons and builds innovation culture." },
+  { name: "Project Management", lead: "Growth & Outreach Lead", color: "#a8a29e", bg: "rgba(168, 162, 158, 0.15)", emoji: "📋", members: 3, tasks: 6, done: 31, progress: 75, objective: "On-time delivery", desc: "Coordinates timelines, dependencies and cross-team delivery." },
+  { name: "Presentation & Outreach", lead: "Growth & Outreach Lead", color: "#f43f5e", bg: "rgba(244, 63, 94, 0.15)", emoji: "🎤", members: 4, tasks: 5, done: 11, progress: 62, objective: "Showcase at 3 events", desc: "Crafts compelling presentations and manages external communications." },
+  { name: "Industry & Career", lead: "Growth & Outreach Lead", color: "#a855f7", bg: "rgba(168, 85, 247, 0.15)", emoji: "💼", members: 4, tasks: 4, done: 8, progress: 50, objective: "Industry connections", desc: "Builds industry partnerships and supports member career development." },
+];
+
+const MEMBERS = [
+  { name: "Arjun Ramesh", role: "Innovation Lead", team: "Problem Discovery", color: "#a855f7", bg: "rgba(168, 85, 247, 0.15)", tasks: 9, done: 14 },
+  { name: "Priya Sharma", role: "Developer", team: "Development", color: "#f97316", bg: "rgba(249, 115, 22, 0.15)", tasks: 6, done: 18 },
+  { name: "Ananya Nair", role: "Designer", team: "Solution Design", color: "#10b981", bg: "rgba(16, 185, 129, 0.15)", tasks: 5, done: 11 },
+  { name: "Rohan Menon", role: "Engineering Lead", team: "Development", color: "#38bdf8", bg: "rgba(56, 189, 248, 0.15)", tasks: 7, done: 22 },
+  { name: "Sneha Pillai", role: "Researcher", team: "Research", color: "#ec4899", bg: "rgba(236, 72, 153, 0.15)", tasks: 4, done: 9 },
+  { name: "Kiran Patel", role: "QA Engineer", team: "Debugging & Testing", color: "#eab308", bg: "rgba(234, 179, 8, 0.15)", tasks: 5, done: 16 },
+  { name: "Divya Krishnan", role: "Writer", team: "Documentation", color: "#84cc16", bg: "rgba(132, 204, 22, 0.15)", tasks: 3, done: 19 },
+  { name: "Arun Kumar", role: "PM", team: "Project Management", color: "#a8a29e", bg: "rgba(168, 162, 158, 0.15)", tasks: 6, done: 28 },
+];
+
+const SAMPLE_TASKS = {
+  todo: [
+    { name: "User interview planning", desc: "Schedule 10 user interviews", priority: "high", assignee: "AR", deadline: "Jun 20" },
+    { name: "Competitive analysis", desc: "Benchmark 5 competitor solutions", priority: "med", assignee: "SP", deadline: "Jun 25" },
+  ],
+  inprogress: [
+    { name: "Pain point synthesis", desc: "Map findings from field research", priority: "crit", assignee: "AN", deadline: "Jun 18" },
+    { name: "Affinity mapping", desc: "Group themes from interviews", priority: "high", assignee: "RM", deadline: "Jun 19" },
+  ],
+  review: [
+    { name: "Problem statement draft", desc: "How Might We questions for top 3 issues", priority: "med", assignee: "KP", deadline: "Jun 17" },
+  ],
+  completed: [
+    { name: "Stakeholder survey", desc: "Collected 60+ responses", priority: "low", assignee: "DK", deadline: "Jun 10" },
+    { name: "Initial desk research", desc: "Secondary source review", priority: "low", assignee: "AK", deadline: "Jun 8" },
+  ]
+};
+
+function makeTeamCard(t, i) {
+  return `<div class="team-card glass-panel" onclick="openTeam(${i})">
+    <div class="team-card-header">
+      <div class="team-icon" style="background:${t.bg}; color:${t.color}">${t.emoji}</div>
+      <div>
+        <div class="team-name">${t.name}</div>
+      </div>
+    </div>
+    <div class="team-lead" style="color:${t.color}">${t.lead}</div>
+    <div class="team-lead">${t.desc}</div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${t.progress}%;background:${t.color}"></div></div>
+    <div class="team-stats">
+      <div class="team-stat"><span>${t.progress}%</span> done</div>
+      <div class="team-stat"><span>${t.tasks}</span> active</div>
+      <div class="team-stat"><span>${t.members}</span> members</div>
+    </div>
+  </div>`;
+}
+
+document.getElementById('dashboard-teams').innerHTML = TEAMS.map((t,i) => makeTeamCard(t,i)).join('');
+document.getElementById('all-teams-grid').innerHTML = TEAMS.map((t,i) => makeTeamCard(t,i)).join('');
+
+document.getElementById('members-grid').innerHTML = MEMBERS.map(m => `
+  <div class="member-card glass-panel">
+    <div class="member-avatar" style="background:${m.bg};color:${m.color}">${m.name.split(' ').map(n=>n[0]).join('')}</div>
+    <div class="member-name">${m.name}</div>
+    <div class="member-role">${m.role}</div>
+    <div class="member-team">${m.team}</div>
+    <div class="member-scores">
+      <div class="member-score"><div class="member-score-val">${m.tasks}</div><div class="member-score-lbl">Active</div></div>
+      <div class="member-score"><div class="member-score-val">${m.done}</div><div class="member-score-lbl">Done</div></div>
+      <div class="member-score"><div class="member-score-val">${Math.round(m.done/(m.done+m.tasks)*100)}%</div><div class="member-score-lbl">Rate</div></div>
+    </div>
+  </div>`).join('');
+
+const completionData = TEAMS.map(t => t.progress);
+const completionChart = document.getElementById('completion-chart');
+completionChart.innerHTML = completionData.map((v,i) =>
+  `<div class="bar" style="height:${Math.round(v * 1.6)}px;background:${TEAMS[i].color};" title="${TEAMS[i].name}: ${v}%"></div>`
+).join('');
+document.getElementById('completion-labels').innerHTML = TEAMS.map(t =>
+  `<div class="chart-label">${t.name.split(' ')[0]}</div>`).join('');
+
+const weekData = [65,72,58,84,79];
+document.getElementById('weekly-chart').innerHTML = weekData.map(v =>
+  `<div class="bar" style="height:${Math.round(v * 2.0)}px; background:var(--accent-purple)"></div>`).join('');
+
+document.getElementById('top-contributors').innerHTML = MEMBERS.sort((a,b)=>b.done-a.done).slice(0,4).map((m,i) => `
+  <div style="display:flex;align-items:center;gap:12px; padding: 8px 0;">
+    <div style="font-size:14px;color:var(--text-muted);width:16px; font-weight: 600;">${i+1}</div>
+    <div style="width:36px;height:36px;border-radius:50%;background:${m.bg};color:${m.color};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">${m.name.split(' ').map(n=>n[0]).join('')}</div>
+    <div style="flex:1"><div style="font-size:14px;font-weight:600;color:var(--text-white)">${m.name}</div><div style="font-size:12px;color:var(--text-gray)">${m.team}</div></div>
+    <div style="font-size:16px;font-weight:600;color:var(--text-white)">${m.done}</div>
+  </div>`).join('');
+
+function makePriorityBadge(p) {
+  const map = { low: ['Low','priority-low'], med: ['Medium','priority-med'], high: ['High','priority-high'], crit: ['Critical','priority-crit'] };
+  const [label, cls] = map[p] || ['Low','priority-low'];
+  return `<span class="priority-badge ${cls}">${label}</span>`;
+}
+
+function makeKanbanCol(title, tasks, color) {
+  return `<div class="kanban-col">
+    <div class="kanban-col-header" style="color:${color}">${title} <span class="kanban-count">${tasks.length}</span></div>
+    ${tasks.map(t => `
+      <div class="task-card">
+        <div class="task-name">${t.name}</div>
+        <div class="task-desc">${t.desc}</div>
+        <div class="task-footer">
+          ${makePriorityBadge(t.priority)}
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="deadline"><i data-lucide="clock"></i> ${t.deadline}</span>
+            <div class="assignee">${t.assignee}</div>
+          </div>
+        </div>
+      </div>`).join('')}
+  </div>`;
+}
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item-ws').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  const titles = { dashboard: 'Dashboard', teams: 'Teams', members: 'Members', analytics: 'Analytics' };
+  document.getElementById('page-title').textContent = titles[id] || id;
+  if (id === 'teams') closeWorkspace();
+}
+
+function openTeam(i) {
+  const t = TEAMS[i];
+  showPage('teams');
+  document.getElementById('team-workspace').classList.add('active');
+  document.getElementById('all-teams-grid').style.display = 'none';
+  document.getElementById('teams-filter').style.display = 'none';
+  document.getElementById('ws-icon').textContent = t.emoji;
+  document.getElementById('ws-icon').style.background = t.bg;
+  document.getElementById('ws-icon').style.color = t.color;
+  document.getElementById('ws-name').textContent = t.name + ' Team';
+  document.getElementById('ws-desc').textContent = t.desc;
+  document.getElementById('ws-lead').textContent = t.lead;
+  document.getElementById('ws-members').textContent = t.members + ' members';
+  document.getElementById('ws-objective').textContent = t.objective;
+  document.getElementById('page-title').textContent = t.name;
+  document.getElementById('kanban-board').innerHTML =
+    makeKanbanCol('To Do', SAMPLE_TASKS.todo, '#a8a29e') +
+    makeKanbanCol('In Progress', SAMPLE_TASKS.inprogress, '#f97316') +
+    makeKanbanCol('Review', SAMPLE_TASKS.review, '#38bdf8') +
+    makeKanbanCol('Completed', SAMPLE_TASKS.completed, '#10b981');
+    
+  // Re-init lucide icons for dynamic kanban board
+  if (window.lucide) window.lucide.createIcons();
+}
+
+function closeWorkspace() {
+  document.getElementById('team-workspace').classList.remove('active');
+  document.getElementById('all-teams-grid').style.display = 'grid';
+  document.getElementById('teams-filter').style.display = 'flex';
+  document.getElementById('page-title').textContent = 'Teams';
+}
+
+function filterTeams(lead, btn) {
+  document.querySelectorAll('#teams-filter .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const filtered = lead === 'all' ? TEAMS : TEAMS.filter(t => t.lead.includes(lead));
+  document.getElementById('all-teams-grid').innerHTML = filtered.map((t, _) => {
+    const i = TEAMS.indexOf(t);
+    return makeTeamCard(t, i);
+  }).join('');
+}
+
+function filterByLead(lead) {
+  showPage('teams');
+  filterTeams(lead, document.querySelector(`#teams-filter .filter-btn:nth-child(${lead === 'Innovation' ? 2 : lead === 'Engineering' ? 3 : 4})`));
+}
+
+function openModal() { document.getElementById('task-modal').classList.add('open'); }
+function closeModal() { document.getElementById('task-modal').classList.remove('open'); }
+document.getElementById('task-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+// Initialize lucide icons on load
+document.addEventListener("DOMContentLoaded", () => {
+    if (window.lucide) {
+        window.lucide.createIcons();
+    }
+});
+</script>
+<script src="script.js?v=2"></script>
+</body>
+</html>

@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- SEO Meta Tags -->
+  <title>Post your project</title>
+  <meta name="description" content="Submit your Projects, Assignments, Final work proof.">
+  <meta name="keywords" content="submit your work, project submission, assignments">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💬</text></svg>">
+
+  <!-- Google Fonts & Stylesheet -->
+  <link rel="stylesheet" href="style.css?v=20260616-clay">
+  <link rel="index" href="index.html">
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="submit-page clay-page">
+
+  <!-- ==========================================
+       BACKGROUND DYNAMIC ELEMENTS
+       ========================================== -->
+  <div class="bg-blobs" aria-hidden="true">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <!-- ==========================================
+       NAVIGATION BAR
+       ========================================== -->
+  <nav class="navbar scrolled" id="navbar" aria-label="Main Navigation">
+    <div class="container nav-container">
+      <a href="index.html" class="logo-link" id="logo-nav">
+        <i data-lucide="help-circle" class="logo-icon" aria-hidden="true"></i>
+        <span class="logo-text">Doubt<span>Hub</span></span>
+      </a>
+
+      <button class="nav-toggle" id="nav-toggle-btn" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="nav-menu-list">
+        <i data-lucide="menu" aria-hidden="true"></i>
+      </button>
+
+      <ul class="nav-menu" id="nav-menu-list" aria-hidden="true">
+        <li class="nav-item"><a href="index.html#home">Home</a></li>
+        <li class="nav-item"><a href="Project_manager.html">Project Manager</a></li>
+        <li class="nav-item"><a href="submit.html">Submit Project</a></li>
+        <li class="nav-item"><a href="index.html#future-scope">Future Scope</a></li>
+        <li class="nav-item"><a href="index.html#contact">Contact</a></li>
+        <li class="nav-item">
+          <a href="index.html#login" class="btn btn-primary nav-btn" id="login-nav-btn">Login</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ==========================================
+       MAIN CONTENT: SUBMIT PROJECT
+       ========================================== -->
+  <main class="submit-section">
+    <div class="container submit-container">
+      
+      <div id="form-view-container" class="reveal-fade-up active">
+        <div class="section-header" style="margin-bottom: 2rem;">
+          <span class="section-tag" id="ask-tag">Submit Project</span>
+          <h1>Submit Your <span class="text-gradient-purple">Project</span></h1>
+          <p>Fill in the details below and attach your documents.</p>
+        </div>
+
+        <div class="glass-panel form-wrapper">
+          <form id="submit-project-form" novalidate>
+            
+            <!-- Project Title -->
+            <div class="form-group">
+              <label for="project-title" class="form-label">
+                Project Title
+              </label>
+              <input 
+                type="text" 
+                id="project-title" 
+                class="form-input" 
+                placeholder="e.g., Enter your work project name or details." 
+                required
+              >
+            </div>
+
+            <!-- Subject Category (Interactive Radio Cards) -->
+            <div class="form-group">
+              <label class="form-label">
+                Topic Category
+              </label>
+              <div class="category-grid">
+                
+                <label class="category-option">
+                  <input type="radio" name="project-category" value="Coding" checked>
+                  <div class="category-card">
+                    <i data-lucide="code"></i>
+                    <span>Coding</span>
+                  </div>
+                </label>
+
+                <label class="category-option">
+                  <input type="radio" name="project-category" value="Mathematics">
+                  <div class="category-card">
+                    <i data-lucide="binary"></i>
+                    <span>Math</span>
+                  </div>
+                </label>
+
+                <label class="category-option">
+                  <input type="radio" name="project-category" value="Physics">
+                  <div class="category-card">
+                    <i data-lucide="atom"></i>
+                    <span>Physics</span>
+                  </div>
+                </label>
+
+                <label class="category-option">
+                  <input type="radio" name="project-category" value="Chemistry">
+                  <div class="category-card">
+                    <i data-lucide="flask-conical"></i>
+                    <span>Chemistry</span>
+                  </div>
+                </label>
+
+                <label class="category-option">
+                  <input type="radio" name="project-category" value="Design">
+                  <div class="category-card">
+                    <i data-lucide="palette"></i>
+                    <span>Design</span>
+                  </div>
+                </label>
+
+                <label class="category-option">
+                  <input type="radio" name="project-category" value="Other">
+                  <div class="category-card">
+                    <i data-lucide="more-horizontal"></i>
+                    <span>Other</span>
+                  </div>
+                </label>
+
+              </div>
+            </div>
+
+          
+            <!-- Project Detail/Description -->
+            <div class="form-group">
+              <label for="project-desc" class="form-label">
+                Detailed Description
+              </label>
+              <textarea 
+                id="project-desc" 
+                class="form-textarea" 
+                placeholder="Explain your project in detail. You can share code snippets, compiler logs, expected vs actual behavior, or specific steps you've tried..." 
+                required
+              ></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="website-link" class="form-label">
+                Website Link <span class="optional">(Optional)</span>
+              </label>
+              <input
+                type="url"
+                id="website-link"
+                class="form-input"
+                placeholder="https://your-website.com"
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="app-link" class="form-label">
+                App / Demo Link <span class="optional">(Optional)</span>
+              </label>
+              <input
+                type="url"
+                id="app-link"
+                class="form-input"
+                placeholder="https://app-link-or-demo.com"
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="document-link" class="form-label">
+                Document / Repository Link <span class="optional">(Optional)</span>
+              </label>
+              <input
+                type="url"
+                id="document-link"
+                class="form-input"
+                placeholder="https://docs.google.com/... or https://github.com/..."
+              >
+            </div>
+
+            <!-- Drag & Drop File Upload supporting images, pdfs and documents -->
+            <div class="form-group">
+              <label class="form-label">
+                Attachments <span class="optional">(Submit PDFs, Images, Documents - Max 5 files)</span>
+              </label>
+              <input type="file" id="file-input" class="sr-only" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip" multiple>
+              <div class="dropzone-container" id="dropzone">
+                <div class="dropzone-content">
+                  <i data-lucide="cloud-upload" class="dropzone-icon"></i>
+                  <div class="dropzone-text">
+                    <h5>Drag & Drop files or click to upload</h5>
+                    <p>Supports PDFs, Documents (DOCX, TXT), Images (PNG, JPG), or ZIP files up to 5MB each</p>
+                  </div>
+                </div>
+              </div>
+              <!-- Preview container for selected files before submitting -->
+              <div id="file-preview-container" style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem;"></div>
+            </div>
+
+            <!-- Submit Actions -->
+            <div class="form-actions">
+              <a href="index.html" class="btn btn-secondary">
+                <i data-lucide="arrow-left"></i>
+                Cancel
+              </a>
+              <button type="submit" class="btn btn-primary" id="post-project-btn">
+                Post Project
+                <i data-lucide="sparkles"></i>
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ==========================================
+       SUBMIT MODAL POPUP WINDOW OVERLAY
+       ========================================== -->
+  <div id="submit-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="glass-panel modal-window">
+      
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <h3 id="modal-title">
+          <i data-lucide="cpu" class="logo-icon" style="width: 18px; height: 18px; color: var(--accent-blue);"></i>
+          Broadcast Status
+        </h3>
+        <button id="modal-close-btn" class="modal-close-btn" aria-label="Close dialog">&times;</button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        
+        <!-- Animated Loader Sequence -->
+        <div id="modal-loader" class="loader-container">
+          <div class="futuristic-spinner">
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring-inner"></div>
+            <div class="spinner-core"></div>
+          </div>
+          
+          <div class="loader-steps">
+            <div class="loader-step" id="step-0">
+              <div class="loader-step-icon"><i data-lucide="search" style="width: 12px; height: 12px;"></i></div>
+              <span>Analyzing query semantics...</span>
+            </div>
+            <div class="loader-step" id="step-1">
+              <div class="loader-step-icon"><i data-lucide="copy" style="width: 12px; height: 12px;"></i></div>
+              <span>Scanning duplicated threads...</span>
+            </div>
+            <div class="loader-step" id="step-2">
+              <div class="loader-step-icon"><i data-lucide="tag" style="width: 12px; height: 12px;"></i></div>
+              <span>Uploading attached documents...</span>
+            </div>
+            <div class="loader-step" id="step-3">
+              <div class="loader-step-icon"><i data-lucide="users" style="width: 12px; height: 12px;"></i></div>
+              <span>Broadcasting to study channels...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Success Details View -->
+        <div id="modal-success" class="modal-success-content" style="display: none;">
+          <div class="success-icon-badge">
+            <i data-lucide="check"></i>
+          </div>
+          <h2>Project Successfully Submitted!</h2>
+          <p>Your project is now live in the central study space. AI tutor support and peer reviewers are notified.</p>
+
+          <!-- Submitted Detail Box -->
+          <div class="project-summary-box">
+            <div class="project-summary-header">
+              <span class="project-summary-category" id="summary-category">Coding</span>
+              <span class="project-summary-urgency" id="summary-urgency">Medium Priority</span>
+            </div>
+            <h4 class="project-summary-title" id="summary-title">React State Update Race Condition</h4>
+            <p class="project-summary-desc" id="summary-desc">Detailed project description goes here...</p>
+
+            <!-- Attachments grid in success state -->
+            <div id="success-attachments-section" class="submitted-attachments" style="display: none;">
+              <div class="submitted-attachments-title">Submitted Attachments:</div>
+              <div id="success-attachments-grid" class="submitted-files-grid">
+                <!-- Rendered Dynamically -->
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 1.25rem; width: 100%; max-width: 450px; justify-content: center;">
+            <button id="btn-modal-close-reset" class="btn btn-secondary" style="flex: 1;">
+              Post Another
+            </button>
+            <a href="index.html" class="btn btn-primary" style="flex: 1;">
+              Back to Home
+              <i data-lucide="arrow-right"></i>
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==========================================
+       FOOTER
+       ========================================== -->
+  <footer class="footer" aria-label="Footer Navigation">
+    <div class="container">
+      <div class="footer-grid">
+        
+        <div class="footer-brand">
+          <a href="index.html" class="logo-link" id="logo-footer">
+            <i data-lucide="help-circle" class="logo-icon" aria-hidden="true"></i>
+            <span class="logo-text">Doubt<span>Hub</span></span>
+          </a>
+          <p class="footer-desc">A premium collaborative student hub engineered to solve academic, technical, and industry doubts together in real time.</p>
+          <div class="footer-socials">
+            <a href="https://github.com" class="social-icon" aria-label="Github Profile" target="_blank" rel="noopener noreferrer">
+              <i data-lucide="github" aria-hidden="true"></i>
+            </a>
+            <a href="https://twitter.com" class="social-icon" aria-label="Twitter Profile" target="_blank" rel="noopener noreferrer">
+              <i data-lucide="twitter" aria-hidden="true"></i>
+            </a>
+            <a href="https://linkedin.com" class="social-icon" aria-label="Linkedin Profile" target="_blank" rel="noopener noreferrer">
+              <i data-lucide="linkedin" aria-hidden="true"></i>
+            </a>
+            <a href="https://discord.com" class="social-icon" aria-label="Discord Server" target="_blank" rel="noopener noreferrer">
+              <i data-lucide="message-square" aria-hidden="true"></i>
+            </a>
+          </div>
+        </div>
+
+        <div class="footer-column">
+          <h4>Navigation</h4>
+          <ul class="footer-links">
+            <li><a href="index.html#home">Home</a></li>
+            <li><a href="Project_manager.html">Project Manager</a></li>
+            <li><a href="submit.html">Submit Project</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-column">
+          <h4>Platform</h4>
+          <ul class="footer-links">
+            <li><a href="index.html#future-scope">Future Scope</a></li>
+            <li><a href="index.html#testimonials">Testimonials</a></li>
+            <li><a href="index.html#contact">Contact Support</a></li>
+            <li><a href="index.html#faq">FAQ</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-column">
+          <h4>Contact Us</h4>
+          <address>
+            <div class="footer-contact-item">
+              <i data-lucide="mail" aria-hidden="true"></i>
+              <span id="contact-email">support@doubthub.io</span>
+            </div>
+            <div class="footer-contact-item">
+              <i data-lucide="map-pin" aria-hidden="true"></i>
+              <span id="contact-address">Silicon Valley Innovation Hub, CA</span>
+            </div>
+            <div class="footer-contact-item">
+              <i data-lucide="phone" aria-hidden="true"></i>
+              <span id="contact-phone">+1 (800) 555-DBTH</span>
+            </div>
+          </address>
+        </div>
+
+      </div>
+
+      <div class="footer-bottom">
+        <p class="copyright">&copy; 2026 DoubtHub Inc. All rights reserved.</p>
+        <div class="footer-legal-links">
+          <a href="index.html#privacy">Privacy Policy</a>
+          <a href="index.html#terms">Terms of Service</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="script.js?v=3"></script>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Elements
+      const SUPABASE_URL = 'https://fgdmxuslojnbyzeaweyd.supabase.co';
+      const SUPABASE_ANON_KEY = 'sb_publishable_T0xMYGMk2MyqEeGw_3QPeg_jr2YfCJR';
+      const SUBMISSION_BUCKET = 'submission-files';
+      const supabaseClient = window.supabase
+        ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+        : null;
+
+      const form = document.getElementById('submit-project-form');
+      const titleInput = document.getElementById('project-title');
+      const descInput = document.getElementById('project-desc');
+      const websiteInput = document.getElementById('website-link');
+      const appInput = document.getElementById('app-link');
+      const documentInput = document.getElementById('document-link');
+      const fileInput = document.getElementById('file-input');
+      const dropzone = document.getElementById('dropzone');
+      const previewContainer = document.getElementById('file-preview-container');
+      const submitBtn = document.getElementById('post-project-btn');
+      
+      // Modal controls
+      const submitModal = document.getElementById('submit-modal');
+      const modalLoader = document.getElementById('modal-loader');
+      const modalSuccess = document.getElementById('modal-success');
+      const modalCloseBtn = document.getElementById('modal-close-btn');
+      const modalResetBtn = document.getElementById('btn-modal-close-reset');
+
+      // Success text fields
+      const sumTitle = document.getElementById('summary-title');
+      const sumDesc = document.getElementById('summary-desc');
+      const sumCategory = document.getElementById('summary-category');
+      const sumUrgency = document.getElementById('summary-urgency');
+      const successAttachmentsSection = document.getElementById('success-attachments-section');
+      const successAttachmentsGrid = document.getElementById('success-attachments-grid');
+
+      // Array to hold files
+      let selectedFiles = [];
+
+      // Draw Lucide icons
+      if (window.lucide) {
+        window.lucide.createIcons();
+      }
+
+      // Drag & Drop event bindings
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.add('dragover');
+        }, false);
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.remove('dragover');
+        }, false);
+      });
+
+      dropzone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files.length > 0) {
+          handleFilesSelection(files);
+        }
+      });
+
+      // Click dropzone triggers file picker
+      dropzone.addEventListener('click', () => {
+        fileInput.click();
+      });
+
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+          handleFilesSelection(e.target.files);
+        }
+      });
+
+      // Display selected files with specific badge representations
+      function handleFilesSelection(files) {
+        for (let file of files) {
+          if (selectedFiles.length >= 5) {
+            alert('You can upload a maximum of 5 files.');
+            break;
+          }
+          if (file.size > 5 * 1024 * 1024) {
+            alert(`File "${file.name}" exceeds the 5MB size limit.`);
+            continue;
+          }
+          // Avoid duplicate selection based on filename & size
+          if (selectedFiles.some(f => f.name === file.name && f.size === file.size)) {
+            continue;
+          }
+          selectedFiles.push(file);
+        }
+        renderFilePreviews();
+      }
+
+      function renderFilePreviews() {
+        previewContainer.innerHTML = '';
+        if (selectedFiles.length === 0) return;
+
+        selectedFiles.forEach((file, index) => {
+          const isImg = file.type.startsWith('image/');
+          const fileIcon = getIconForFileType(file.name);
+          const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+
+          const badge = document.createElement('div');
+          badge.className = 'file-preview-badge';
+          badge.style.display = 'inline-flex';
+          badge.style.alignItems = 'center';
+          badge.style.gap = '0.5rem';
+          badge.style.margin = '0.2rem';
+          badge.innerHTML = `
+            <i data-lucide="${fileIcon}" style="width: 14px; height: 14px; flex-shrink:0;"></i>
+            <span style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${file.name} (${sizeMB} MB)</span>
+            <button type="button" class="remove-preview-btn" data-index="${index}" aria-label="Remove attachment">
+              <i data-lucide="x" style="width: 14px; height: 14px;"></i>
+            </button>
+          `;
+          previewContainer.appendChild(badge);
+        });
+
+        if (window.lucide) {
+          window.lucide.createIcons();
+        }
+
+        // Bind removal buttons
+        document.querySelectorAll('.remove-preview-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const idx = parseInt(btn.getAttribute('data-index'), 10);
+            selectedFiles.splice(idx, 1);
+            renderFilePreviews();
+            fileInput.value = ''; // Reset input to re-allow selection
+          });
+        });
+      }
+
+      // Helper to return Lucide icon class based on file extensions
+      function getIconForFileType(filename) {
+        const ext = filename.split('.').pop().toLowerCase();
+        if (['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'].includes(ext)) {
+          return 'image';
+        }
+        if (ext === 'pdf') {
+          return 'file-text'; // PDF icon representation
+        }
+        if (['doc', 'docx', 'odt'].includes(ext)) {
+          return 'file-text';
+        }
+        if (['xls', 'xlsx', 'csv'].includes(ext)) {
+          return 'table';
+        }
+        if (['ppt', 'pptx'].includes(ext)) {
+          return 'presentation';
+        }
+        if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) {
+          return 'folder-archive';
+        }
+        return 'file'; // Default doc type
+      }
+
+      // Form validation & submission
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        let isValid = true;
+
+        if (titleInput.value.trim().length < 8) {
+          showInputError(titleInput, 'Please enter a title containing at least 8 characters.');
+          isValid = false;
+        } else {
+          clearInputError(titleInput);
+        }
+
+        if (descInput.value.trim().length < 15) {
+          showInputError(descInput, 'Please provide a detailed description (min 15 characters).');
+          isValid = false;
+        } else {
+          clearInputError(descInput);
+        }
+
+        if (!isValid) return;
+        if (!supabaseClient) {
+          alert('Supabase is not available. Please check your internet connection and reload.');
+          return;
+        }
+
+        // Collect form values
+        const categoryVal = document.querySelector('input[name="project-category"]:checked')?.value || 'Other';
+        const titleVal = titleInput.value;
+        const descVal = descInput.value;
+        const linkValues = {
+          websiteUrl: websiteInput.value.trim(),
+          appUrl: appInput.value.trim(),
+          documentUrl: documentInput.value.trim()
+        };
+
+        try {
+          setSubmitLoading(true);
+          const savedSubmission = await triggerModalLoader(titleVal, descVal, categoryVal, linkValues);
+          showModalSuccess(titleVal, descVal, categoryVal, savedSubmission);
+        } catch (error) {
+          console.error('Submission failed:', error);
+          modalLoader.style.display = 'none';
+          modalSuccess.style.display = 'flex';
+          modalSuccess.innerHTML = `
+            <div class="success-icon-badge" style="background:rgba(239,68,68,0.16);color:#f87171;">
+              <i data-lucide="alert-triangle"></i>
+            </div>
+            <h2>Submission Failed</h2>
+            <p>${escapeHTML(error.message || 'Unable to save your submission. Please try again.')}</p>
+            <button id="btn-submit-error-close" class="btn btn-secondary" style="margin-top:1rem;">Close</button>
+          `;
+          document.getElementById('btn-submit-error-close')?.addEventListener('click', () => {
+            submitModal.classList.remove('active');
+            document.body.style.overflow = '';
+          });
+          if (window.lucide) window.lucide.createIcons();
+        } finally {
+          setSubmitLoading(false);
+        }
+      });
+
+      function setSubmitLoading(isLoading) {
+        if (!submitBtn) return;
+        submitBtn.disabled = isLoading;
+        submitBtn.style.opacity = isLoading ? '0.72' : '';
+        submitBtn.style.pointerEvents = isLoading ? 'none' : '';
+      }
+
+      function showInputError(inputEl, msg) {
+        inputEl.style.borderColor = '#ef4444';
+        inputEl.style.boxShadow = '0 0 0 4px rgba(239, 68, 68, 0.15)';
+        
+        let errEl = inputEl.nextElementSibling;
+        if (!errEl || !errEl.classList.contains('form-error-msg')) {
+          errEl = document.createElement('div');
+          errEl.className = 'form-error-msg';
+          errEl.style.color = '#f87171';
+          errEl.style.fontSize = '0.85rem';
+          errEl.style.marginTop = '0.25rem';
+          inputEl.parentNode.appendChild(errEl);
+        }
+        errEl.textContent = msg;
+      }
+
+      function clearInputError(inputEl) {
+        inputEl.style.borderColor = '';
+        inputEl.style.boxShadow = '';
+        const errEl = inputEl.parentNode.querySelector('.form-error-msg');
+        if (errEl) {
+          errEl.remove();
+        }
+      }
+
+      function delay(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+      }
+
+      function safeFileName(name) {
+        return String(name || 'file')
+          .replace(/[^a-zA-Z0-9._-]+/g, '-')
+          .replace(/-+/g, '-')
+          .slice(0, 120);
+      }
+
+      function escapeHTML(value) {
+        const div = document.createElement('div');
+        div.textContent = String(value || '');
+        return div.innerHTML;
+      }
+
+      async function uploadSubmissionFiles(submissionId) {
+        const uploaded = [];
+        for (let index = 0; index < selectedFiles.length; index++) {
+          const file = selectedFiles[index];
+          const path = `${submissionId}/${Date.now()}-${index}-${safeFileName(file.name)}`;
+          const { error } = await supabaseClient.storage
+            .from(SUBMISSION_BUCKET)
+            .upload(path, file, {
+              cacheControl: '3600',
+              upsert: false,
+              contentType: file.type || 'application/octet-stream'
+            });
+
+          if (error) throw new Error(`File upload failed for "${file.name}": ${error.message}`);
+
+          uploaded.push({
+            bucket: SUBMISSION_BUCKET,
+            path,
+            name: file.name,
+            type: file.type || 'application/octet-stream',
+            size: file.size
+          });
+        }
+        return uploaded;
+      }
+
+      async function saveSubmission(title, desc, category, links) {
+        const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+        if (sessionError) throw sessionError;
+        const user = sessionData?.session?.user || null;
+
+        const submissionId = crypto.randomUUID();
+        const attachments = await uploadSubmissionFiles(submissionId);
+        const payload = {
+          id: submissionId,
+          user_id: user?.id || null,
+          submitter_email: user?.email || null,
+          title: title.trim(),
+          category,
+          description: desc.trim(),
+          website_url: links.websiteUrl || null,
+          app_url: links.appUrl || null,
+          document_url: links.documentUrl || null,
+          attachments,
+          status: 'submitted'
+        };
+
+        const { data, error } = await supabaseClient
+          .from('project_submissions')
+          .insert([payload])
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      }
+
+      // Loader steps inside modal window
+      async function triggerModalLoader(title, desc, category, links) {
+        // Toggle modal backdrop
+        submitModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+
+        // Toggle contents inside the modal
+        modalLoader.style.display = 'flex';
+        modalSuccess.style.display = 'none';
+
+        const steps = [
+          document.getElementById('step-0'),
+          document.getElementById('step-1'),
+          document.getElementById('step-2'),
+          document.getElementById('step-3')
+        ];
+
+        // Reset step animations
+        steps.forEach(s => {
+          s.className = 'loader-step';
+          const iconWrapper = s.querySelector('.loader-step-icon');
+          iconWrapper.innerHTML = `<i data-lucide="${getOriginalStepIcon(s.id)}" style="width: 12px; height: 12px;"></i>`;
+        });
+        if (window.lucide) window.lucide.createIcons();
+
+        for (let currentStep = 0; currentStep < steps.length; currentStep++) {
+          if (currentStep > 0) {
+            const prevIndex = currentStep - 1;
+            steps[prevIndex].classList.remove('active');
+            steps[prevIndex].classList.add('completed');
+            steps[prevIndex].querySelector('.loader-step-icon').innerHTML =
+              '<i data-lucide="check" style="width: 12px; height: 12px; color: var(--accent-blue);"></i>';
+          }
+
+          steps[currentStep].classList.add('active');
+          if (window.lucide) window.lucide.createIcons();
+
+          if (currentStep === 2) {
+            const saved = await saveSubmission(title, desc, category, links);
+            await delay(450);
+            steps[currentStep].classList.remove('active');
+            steps[currentStep].classList.add('completed');
+            steps[currentStep].querySelector('.loader-step-icon').innerHTML =
+              '<i data-lucide="check" style="width: 12px; height: 12px; color: var(--accent-blue);"></i>';
+            if (window.lucide) window.lucide.createIcons();
+            steps[3].classList.add('active');
+            await delay(500);
+            steps[3].classList.remove('active');
+            steps[3].classList.add('completed');
+            steps[3].querySelector('.loader-step-icon').innerHTML =
+              '<i data-lucide="check" style="width: 12px; height: 12px; color: var(--accent-blue);"></i>';
+            modalLoader.style.display = 'none';
+            return saved;
+          }
+
+          await delay(450);
+        }
+
+        function getOriginalStepIcon(id) {
+          switch(id) {
+            case 'step-0': return 'search';
+            case 'step-1': return 'copy';
+            case 'step-2': return 'tag';
+            case 'step-3': return 'users';
+            default: return 'help-circle';
+          }
+        }
+      }
+
+      // Display successfully submitted details inside separate popup success box
+      function showModalSuccess(title, desc, category, savedSubmission) {
+        sumTitle.textContent = title;
+        sumDesc.textContent = desc;
+        sumCategory.textContent = category;
+        sumUrgency.textContent = `Saved: ${new Date(savedSubmission.created_at).toLocaleString()}`;
+        
+        sumUrgency.className = 'project-summary-urgency';
+
+        // Populate attached files details
+        if (selectedFiles.length > 0) {
+          successAttachmentsSection.style.display = 'block';
+          successAttachmentsGrid.innerHTML = '';
+
+          selectedFiles.forEach(file => {
+            const isImg = file.type.startsWith('image/');
+            const fileIcon = getIconForFileType(file.name);
+            const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+
+            if (isImg) {
+              // Read image and display live thumbnail preview
+              const reader = new FileReader();
+              const container = document.createElement('div');
+              container.className = 'submitted-image-preview-container';
+              
+              const img = document.createElement('img');
+              img.className = 'submitted-image-preview';
+              img.alt = `Submitted attachment image: ${file.name}`;
+              
+              reader.onload = (e) => {
+                img.src = e.target.result;
+              };
+              reader.readAsDataURL(file);
+
+              container.appendChild(img);
+              successAttachmentsGrid.appendChild(container);
+            } else {
+              // Render PDF/doc file badge card
+              const card = document.createElement('div');
+              card.className = 'submitted-file-card';
+              card.innerHTML = `
+                <div class="submitted-file-icon">
+                  <i data-lucide="${fileIcon}"></i>
+                </div>
+                <div class="submitted-file-info">
+                  <span class="submitted-file-name" title="${file.name}">${file.name}</span>
+                  <span class="submitted-file-size">${sizeMB} MB &bull; PDF/Document File</span>
+                </div>
+              `;
+              successAttachmentsGrid.appendChild(card);
+            }
+          });
+
+          if (window.lucide) {
+            window.lucide.createIcons();
+          }
+        } else {
+          successAttachmentsSection.style.display = 'none';
+          successAttachmentsGrid.innerHTML = '';
+        }
+
+        modalSuccess.style.display = 'flex';
+      }
+
+      // Close modal popup window and reset input form
+      function closeModalAndReset() {
+        submitModal.classList.remove('active');
+        document.body.style.overflow = '';
+        
+        // Reset states
+        form.reset();
+        selectedFiles = [];
+        previewContainer.innerHTML = '';
+        fileInput.value = '';
+
+        // Reset errors
+        clearInputError(titleInput);
+        clearInputError(descInput);
+      }
+
+      modalCloseBtn.addEventListener('click', closeModalAndReset);
+      modalResetBtn.addEventListener('click', closeModalAndReset);
+
+      // Close modal on escape key
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && submitModal.classList.contains('active')) {
+          closeModalAndReset();
+        }
+      });
+    });
+  </script>
+</body>
+</html>

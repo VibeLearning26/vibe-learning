@@ -73,6 +73,7 @@ const goToSignup = document.getElementById('go-to-signup');
 const goToSignin = document.getElementById('go-to-signin');
 const goToForgot = document.getElementById('go-to-forgot');
 const goToSigninFromForgot = document.getElementById('go-to-signin-from-forgot');
+const fastAuthMedia = window.matchMedia('(max-width: 760px), (pointer: coarse)');
 
 // ============================================
 // 3. Landing CTA Focus
@@ -82,19 +83,26 @@ function focusField(selector) {
   input?.focus({ preventScroll: true });
 }
 
+function openFastMobileAuth() {
+  if (!fastAuthMedia.matches) return;
+  authPage.classList.add('auth-fast-auth-open');
+}
+
 function activateSignin() {
+  openFastMobileAuth();
   clearMessages();
   revealPanel(signinPanel);
   updateHeader('Sign In', 'Enter your credentials to continue');
-  window.setTimeout(() => focusField('#signin-email'), 120);
+  window.setTimeout(() => focusField('#signin-email'), fastAuthMedia.matches ? 320 : 120);
   if (window.lucide) lucide.createIcons();
 }
 
 function activateSignup() {
+  openFastMobileAuth();
   clearMessages();
   revealPanel(signupPanel);
   updateHeader('Create Account', 'Start your DoubtHub orbit');
-  window.setTimeout(() => focusField('#signup-name'), 120);
+  window.setTimeout(() => focusField('#signup-name'), fastAuthMedia.matches ? 320 : 120);
   if (window.lucide) lucide.createIcons();
 }
 
@@ -103,7 +111,7 @@ heroLoginCta?.addEventListener('click', activateSignin);
 focusSignupCta?.addEventListener('click', activateSignup);
 heroSignupCta?.addEventListener('click', activateSignup);
 
-if (heroLoginCta && window.matchMedia('(max-width: 760px), (pointer: coarse)').matches) {
+if (heroLoginCta && fastAuthMedia.matches) {
   heroLoginCta.addEventListener('click', () => {
     window.setTimeout(() => {
       const loaderState = document.documentElement.dataset.authDeviceLoader;

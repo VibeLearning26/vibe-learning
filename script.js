@@ -11,12 +11,23 @@ document.addEventListener('DOMContentLoaded', () => {
   initHolographicCardGlow();
   initSmoothScrollKeyboardFix();
   initAuthListener();
+  initContactForm();
 });
 
+const SUPABASE_URL = 'https://fgdmxuslojnbyzeaweyd.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_T0xMYGMk2MyqEeGw_3QPeg_jr2YfCJR';
+let sharedSupabaseClient = null;
+
+function createSupabaseClient() {
+  if (!window.supabase) return null;
+  if (!sharedSupabaseClient) {
+    sharedSupabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+  return sharedSupabaseClient;
+}
+
 function initAuthListener() {
-  const SUPABASE_URL = 'https://fgdmxuslojnbyzeaweyd.supabase.co';
-  const SUPABASE_ANON_KEY = 'sb_publishable_T0xMYGMk2MyqEeGw_3QPeg_jr2YfCJR';
-  const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+  const supabase = createSupabaseClient();
   
   const loginBtn = document.getElementById('login-nav-btn');
   if (!supabase) {
@@ -43,6 +54,58 @@ function initAuthListener() {
     } else {
       window.location.replace('auth.html');
     }
+  });
+}
+
+function initContactForm() {
+  const form = document.getElementById('contact-request-form');
+  const status = document.getElementById('contact-form-status');
+  const submitButton = document.getElementById('contact-submit-btn');
+  if (!form || !status || !submitButton) return;
+
+  const supabase = createSupabaseClient();
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    if (!supabase) {
+      status.textContent = 'The message service is unavailable. Please refresh and try again.';
+      status.dataset.state = 'error';
+      return;
+    }
+
+    const payload = {
+      name: document.getElementById('contact-name-input').value.trim(),
+      email: document.getElementById('contact-email-input').value.trim(),
+      subject: document.getElementById('contact-subject-input').value.trim(),
+      message: document.getElementById('contact-message-input').value.trim(),
+      source: 'index_contact'
+    };
+
+    if (!payload.name || !payload.email || !payload.subject || !payload.message) {
+      status.textContent = 'Please complete every field.';
+      status.dataset.state = 'error';
+      return;
+    }
+
+    submitButton.disabled = true;
+    status.textContent = 'Sending your request...';
+    status.dataset.state = 'pending';
+
+    const { error } = await supabase.from('contact_requests').insert([payload]);
+
+    if (error) {
+      console.error('Contact request failed:', error);
+      status.textContent = 'The request could not be sent. Please try again.';
+      status.dataset.state = 'error';
+      submitButton.disabled = false;
+      return;
+    }
+
+    form.reset();
+    status.textContent = 'Your request was sent successfully.';
+    status.dataset.state = 'success';
+    submitButton.disabled = false;
   });
 }
 
