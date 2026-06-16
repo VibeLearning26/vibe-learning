@@ -61,6 +61,8 @@ const forgotPanel = document.getElementById('auth-forgot-panel');
 const signinForm = document.getElementById('signin-form');
 const signupForm = document.getElementById('signup-form');
 const forgotForm = document.getElementById('forgot-form');
+const signinGoogleBtn = document.getElementById('signin-google-btn');
+const signupGoogleBtn = document.getElementById('signup-google-btn');
 
 const signinError = document.getElementById('signin-error');
 const signinSuccess = document.getElementById('signin-success');
@@ -214,6 +216,29 @@ function requireAuthService(errorEl) {
   return false;
 }
 
+async function continueWithGoogle(button, errorEl) {
+  clearMessages();
+  if (!requireAuthService(errorEl)) return;
+
+  setLoading(button, true, 'Opening Google...');
+
+  const { error } = await supabaseClient.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${window.location.origin}/auth.html`,
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'select_account',
+      },
+    },
+  });
+
+  if (error) {
+    showMsg(errorEl, error.message);
+    setLoading(button, false);
+  }
+}
+
 function getSupabaseName(user) {
   const metadata = user?.user_metadata || user?.app_metadata || {};
   return metadata.full_name || metadata.name || metadata.display_name || '';
@@ -278,6 +303,14 @@ document.querySelectorAll('.auth-input').forEach((input) => {
       input.classList.remove('ink-writing');
     }, 180);
   });
+});
+
+signinGoogleBtn?.addEventListener('click', () => {
+  continueWithGoogle(signinGoogleBtn, signinError);
+});
+
+signupGoogleBtn?.addEventListener('click', () => {
+  continueWithGoogle(signupGoogleBtn, signupError);
 });
 
 // ============================================

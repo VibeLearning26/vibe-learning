@@ -25,13 +25,13 @@
   <link rel="preload" href="assets/models/authentication_device.glb" as="fetch" type="model/gltf-binary" crossorigin fetchpriority="low" media="(min-width: 761px)">
   <link rel="modulepreload" href="vendor/three/build/three.module.js" media="(min-width: 761px)">
   <link rel="modulepreload" href="vendor/three/examples/jsm/loaders/GLTFLoader.js" media="(min-width: 761px)">
-  <link rel="stylesheet" href="style.css?v=53">
+  <link rel="stylesheet" href="style.css?v=54">
 
   <script src="https://unpkg.com/lucide@latest" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="auth-galaxy.js?v=17" defer></script>
   <script src="auth-device-loader.js?v=4" defer></script>
-  <script src="auth.js?v=22" defer></script>
+  <script src="auth.js?v=23" defer></script>
 </head>
 <body class="auth-page auth-galaxy-page">
   <canvas class="auth-galaxy-canvas" id="auth-galaxy-canvas" aria-hidden="true"></canvas>
@@ -97,6 +97,15 @@
                 </button>
               </form>
 
+              <div class="auth-divider" aria-hidden="true">
+                <span>or</span>
+              </div>
+
+              <button type="button" class="auth-google-btn" id="signin-google-btn">
+                <span class="auth-google-mark" aria-hidden="true">G</span>
+                <span>Continue with Google</span>
+              </button>
+
               <p class="auth-switch-text">
                 No account yet? <span class="auth-switch-link" id="go-to-signup">Create one</span>
               </p>
@@ -133,6 +142,15 @@
                   <span>Create Account</span>
                 </button>
               </form>
+
+              <div class="auth-divider" aria-hidden="true">
+                <span>or</span>
+              </div>
+
+              <button type="button" class="auth-google-btn" id="signup-google-btn">
+                <span class="auth-google-mark" aria-hidden="true">G</span>
+                <span>Create with Google</span>
+              </button>
 
               <p class="auth-switch-text">
                 Already have an account? <span class="auth-switch-link" id="go-to-signin">Sign in</span>
