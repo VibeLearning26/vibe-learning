@@ -1026,18 +1026,6 @@ function isEmailNotConfirmed(error) {
   return /email not confirmed/i.test(error?.message || '');
 }
 
-async function resendConfirmationEmail(email) {
-  if (!supabaseClient || !email) return;
-  const { error } = await supabaseClient.auth.resend({
-    type: 'signup',
-    email,
-    options: {
-      emailRedirectTo: `${window.location.origin}/auth.html`,
-    },
-  });
-  if (error) console.warn('Unable to resend confirmation email:', error.message);
-}
-
 function updateLabels() {
   const labels = [
     [MESH_NAMES.purpilButton, 'CONTINUE', 'purpilButton', '#081018', 0.36],
@@ -1300,7 +1288,7 @@ async function submitDouthubAuth() {
       if (error) throw error;
       await saveAuthProfile(data?.user, state.name.trim(), state.email.trim());
       if (!data?.session) {
-        updateVioletScreen('CHECK EMAIL TO CONFIRM');
+        updateVioletScreen('ACCOUNT CREATED');
         window.setTimeout(() => updateVioletScreen(), 2200);
         return;
       }
@@ -1323,8 +1311,7 @@ async function submitDouthubAuth() {
     }, 650);
   } catch (error) {
     if (isEmailNotConfirmed(error)) {
-      await resendConfirmationEmail(state.email.trim());
-      updateVioletScreen('CHECK EMAIL TO CONFIRM');
+      updateVioletScreen('ERROR: EMAIL NOT CONFIRMED');
       window.setTimeout(() => updateVioletScreen(), 2400);
       return;
     }
@@ -1333,13 +1320,43 @@ async function submitDouthubAuth() {
   }
 }
 
+async function startProviderAuth(provider) {
+  if (!supabaseClient) {
+    updateVioletScreen('ERROR: AUTH OFFLINE');
+    window.setTimeout(() => updateVioletScreen(), 1500);
+    return;
+  }
+
+  if (provider !== 'google' && provider !== 'github') {
+    updateVioletScreen('DOUBTHUB READY');
+    window.setTimeout(() => updateVioletScreen(), 1200);
+    return;
+  }
+
+  updateVioletScreen(`OPENING ${provider.toUpperCase()}...`);
+
+  const { error } = await supabaseClient.auth.signInWithOAuth({
+    provider,
+    options: {
+      redirectTo: `${window.location.origin}/auth.html`,
+      queryParams: provider === 'google'
+        ? {
+          access_type: 'offline',
+          prompt: 'select_account',
+        }
+        : undefined,
+    },
+  });
+
+  if (error) {
+    updateVioletScreen(`ERROR: ${(error?.message || 'AUTH FAILED').slice(0, 28)}`);
+    window.setTimeout(() => updateVioletScreen(), 1800);
+  }
+}
+
 function validateAndContinue({ allowEmptyFields = false } = {}) {
   if (state.authProvider !== 'douthub') {
-    updateVioletScreen('CONNECTING...');
-    window.setTimeout(() => {
-      updateBlueScreen();
-      transitionTo('blue');
-    }, 850);
+    startProviderAuth(state.authProvider);
     return;
   }
 
@@ -1378,7 +1395,7 @@ function validateAndContinue({ allowEmptyFields = false } = {}) {
 
 function confirmAuthProvider() {
   if (state.authProvider === 'google' || state.authProvider === 'github') {
-    validateAndContinue({ allowEmptyFields: true });
+    startProviderAuth(state.authProvider);
     return;
   }
 
