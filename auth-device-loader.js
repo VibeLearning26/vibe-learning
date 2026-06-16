@@ -23,17 +23,11 @@
   }
 
   const mobile = window.matchMedia('(max-width: 760px), (pointer: coarse)').matches;
-  if (!mobile) {
-    loadAuthDevice();
+  if (mobile) {
+    document.documentElement.dataset.authDeviceLoader = 'mobile-disabled';
+    document.body.classList.add('auth-device-fallback');
     return;
   }
 
-  window.addEventListener('pointerdown', loadAuthDevice, { once: true, passive: true });
-  window.addEventListener('keydown', loadAuthDevice, { once: true });
-
-  if ('requestIdleCallback' in window) {
-    window.requestIdleCallback(loadAuthDevice, { timeout: 2200 });
-  } else {
-    window.setTimeout(loadAuthDevice, 1600);
-  }
+  loadAuthDevice();
 })();

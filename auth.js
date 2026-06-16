@@ -252,22 +252,6 @@ async function loadAuthProfileName(user, email) {
   return data?.full_name || email.split('@')[0] || '';
 }
 
-function isEmailNotConfirmed(error) {
-  return /email not confirmed/i.test(error?.message || '');
-}
-
-async function resendConfirmationEmail(email) {
-  if (!supabaseClient || !email) return;
-  const { error } = await supabaseClient.auth.resend({
-    type: 'signup',
-    email,
-    options: {
-      emailRedirectTo: `${window.location.origin}/auth.html`,
-    },
-  });
-  if (error) console.warn('Unable to resend confirmation email:', error.message);
-}
-
 // ============================================
 // 6. Password Visibility Toggles
 // ============================================
@@ -333,12 +317,7 @@ signupForm.addEventListener('submit', async (e) => {
     if (error) throw error;
     await saveAuthProfile(data?.user, name, email);
 
-    showMsg(
-      signupSuccess,
-      data?.session
-        ? 'Account created. You can sign in now.'
-        : 'Account created. Check your email and confirm the link before signing in.'
-    );
+    showMsg(signupSuccess, 'Account created. You can sign in now.');
     signupForm.reset();
   } catch (error) {
     showMsg(signupError, error.message);
@@ -368,13 +347,7 @@ signinForm.addEventListener('submit', async (e) => {
       password,
     });
 
-    if (error) {
-      if (isEmailNotConfirmed(error)) {
-        await resendConfirmationEmail(email);
-        throw new Error('Email not confirmed. I sent the confirmation link again. Check your inbox.');
-      }
-      throw error;
-    }
+    if (error) throw error;
 
     const profileName = await loadAuthProfileName(data?.user, email);
     if (profileName) localStorage.setItem('doubthubUserName', profileName);

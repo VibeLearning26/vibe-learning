@@ -6777,6 +6777,10 @@ body.auth-galaxy-page .auth-trust span {
     overflow: hidden;
   }
 
+  body.auth-galaxy-page .auth-device-canvas {
+    display: none !important;
+  }
+
   body.auth-galaxy-page .auth-galaxy-canvas {
     width: 100dvw !important;
     height: 100dvh !important;
