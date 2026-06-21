@@ -1158,13 +1158,15 @@
         wheelRoles = rolesRes.data || [];
         wheelMembers = membersRes.data || [];
 
-        // Check if active assignments are expired
         const now = new Date();
-        activeAssignments = (assignmentsRes.data || []).filter(a => new Date(a.expires_at) > now);
+        const configWindow = getConfigAssignmentWindow();
+        activeAssignments = (assignmentsRes.data || []).filter((assignment) => {
+          const assignmentExpires = getAssignmentExpiry(assignment);
+          return assignmentExpires > now && (!configWindow || configWindow.expiresAt > now);
+        });
 
-        // If there are expired active assignments, deactivate them
         const expiredIds = (assignmentsRes.data || [])
-          .filter(a => new Date(a.expires_at) <= now)
+          .filter((assignment) => getAssignmentExpiry(assignment) <= now || (configWindow && configWindow.expiresAt <= now))
           .map(a => a.id);
 
         if (expiredIds.length > 0) {
@@ -1181,7 +1183,7 @@
     async function saveAssignments(assignments) {
       if (!supabaseClient) return;
 
-      const durationDays = wheelConfig.assignment_duration_days || 7;
+      const durationDays = Number(wheelConfig.assignment_duration_days) || 7;
       const now = new Date();
       const expiresAt = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
 
@@ -1258,7 +1260,7 @@
       if (userAssignment) {
         myRole.classList.add('visible');
         myRoleName.textContent = userAssignment.role_name;
-        const daysLeft = getDaysLeft(userAssignment.expires_at);
+        const daysLeft = getDaysLeft(getAssignmentExpiry(userAssignment));
         myRoleExpiry.textContent = `Expires in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`;
       } else {
         myRole.classList.remove('visible');
@@ -1321,7 +1323,7 @@
 
       if (activeAssignments.length > 0) {
         // Locked — assignments are active
-        const firstExpiry = activeAssignments[0]?.expires_at;
+        const firstExpiry = getAssignmentExpiry(activeAssignments[0]);
         const daysLeft = getDaysLeft(firstExpiry);
 
         spinBtn.disabled = true;
@@ -1348,8 +1350,26 @@
     }
 
     function getDaysLeft(expiresAt) {
-      const remaining = Math.max(0, new Date(expiresAt).getTime() - Date.now());
+      const expiryTime = expiresAt instanceof Date ? expiresAt.getTime() : new Date(expiresAt).getTime();
+      const remaining = Math.max(0, expiryTime - Date.now());
       return Math.ceil(remaining / (24 * 60 * 60 * 1000));
+    }
+
+    function getConfigAssignmentWindow() {
+      if (!wheelConfig.last_spin_at) return null;
+
+      const startedAt = new Date(wheelConfig.last_spin_at);
+      if (Number.isNaN(startedAt.getTime())) return null;
+
+      const durationDays = Number(wheelConfig.assignment_duration_days) || 7;
+      const expiresAt = new Date(startedAt.getTime() + durationDays * 24 * 60 * 60 * 1000);
+      return { startedAt, expiresAt };
+    }
+
+    function getAssignmentExpiry(assignment) {
+      const configWindow = getConfigAssignmentWindow();
+      if (configWindow) return configWindow.expiresAt;
+      return new Date(assignment?.expires_at);
     }
 
     function escapeHTML(str) {

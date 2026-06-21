@@ -59,6 +59,15 @@
         <li class="nav-item"><a href="submit.html">Submit Project</a></li>
         <li class="nav-item"><a href="#future-scope">Future Scope</a></li>
         <li class="nav-item"><a href="#contact">Contact</a></li>
+        <li class="nav-item nav-profile-item" id="nav-profile-item" hidden>
+          <div class="nav-profile" aria-label="Signed in user profile">
+            <span class="nav-profile-avatar" id="nav-profile-avatar" aria-hidden="true">U</span>
+            <span class="nav-profile-copy">
+              <span class="nav-profile-name" id="nav-profile-name">User</span>
+              <span class="nav-profile-email" id="nav-profile-email">Signed in</span>
+            </span>
+          </div>
+        </li>
         <li class="nav-item">
           <a href="auth.html" class="btn btn-primary nav-btn" id="login-nav-btn">Login</a>
         </li>
@@ -638,7 +647,7 @@
   </footer>
 
   <!-- Bind animations and menu scripting -->
-  <script src="script.js?v=3"></script>
+  <script src="script.js?v=4"></script>
   <script>
     // Force Lucide icons to draw immediately after load
     if (window.lucide) {

@@ -82,9 +82,68 @@ CREATE INDEX IF NOT EXISTS idx_wheel_members_email ON wheel_members(email);
 
 
 -- ============================================
--- 2.5 Auto-sync Auth Profiles to Wheel Members
+-- 2.5 Auto-sync registered Authentication users to Wheel Members
 -- ============================================
--- First, ensure auth_profiles exists
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_wheel_members_email_unique
+  ON public.wheel_members (lower(email))
+  WHERE email IS NOT NULL;
+
+CREATE OR REPLACE FUNCTION public.sync_auth_user_to_wheel_member()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+DECLARE
+  display_name TEXT;
+BEGIN
+  display_name := COALESCE(
+    NEW.raw_user_meta_data->>'full_name',
+    NEW.raw_user_meta_data->>'name',
+    NEW.raw_user_meta_data->>'display_name',
+    split_part(NEW.email, '@', 1),
+    'User'
+  );
+
+  INSERT INTO public.wheel_members (name, email, is_active)
+  VALUES (display_name, NEW.email, true)
+  ON CONFLICT (lower(email)) WHERE email IS NOT NULL
+  DO UPDATE SET
+    name = EXCLUDED.name,
+    is_active = true;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS on_auth_user_created_wheel_member ON auth.users;
+
+CREATE TRIGGER on_auth_user_created_wheel_member
+AFTER INSERT ON auth.users
+FOR EACH ROW
+EXECUTE FUNCTION public.sync_auth_user_to_wheel_member();
+
+-- Backfill existing Authentication users into wheel_members.
+INSERT INTO public.wheel_members (name, email, is_active)
+SELECT
+  COALESCE(
+    raw_user_meta_data->>'full_name',
+    raw_user_meta_data->>'name',
+    raw_user_meta_data->>'display_name',
+    split_part(email, '@', 1),
+    'User'
+  ) AS name,
+  email,
+  true AS is_active
+FROM auth.users
+WHERE email IS NOT NULL
+ON CONFLICT (lower(email)) WHERE email IS NOT NULL
+DO UPDATE SET
+  name = EXCLUDED.name,
+  is_active = true;
+
+-- Keep the older auth_profiles table available for profile display code.
 CREATE TABLE IF NOT EXISTS public.auth_profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT NOT NULL,
@@ -92,7 +151,7 @@ CREATE TABLE IF NOT EXISTS public.auth_profiles (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
--- Function to sync new users to wheel_members
+-- Also sync auth_profiles updates into wheel_members when profile code writes names.
 CREATE OR REPLACE FUNCTION public.handle_new_wheel_member()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -102,7 +161,10 @@ AS $$
 BEGIN
   INSERT INTO public.wheel_members (name, email)
   VALUES (NEW.full_name, NEW.email)
-  ON CONFLICT DO NOTHING;
+  ON CONFLICT (lower(email)) WHERE email IS NOT NULL
+  DO UPDATE SET
+    name = EXCLUDED.name,
+    is_active = true;
   RETURN NEW;
 END;
 $$;
@@ -117,7 +179,11 @@ EXECUTE FUNCTION public.handle_new_wheel_member();
 -- Backfill: Insert existing auth_profiles into wheel_members
 INSERT INTO public.wheel_members (name, email)
 SELECT full_name, email FROM public.auth_profiles
-WHERE email NOT IN (SELECT email FROM public.wheel_members WHERE email IS NOT NULL);
+WHERE email IS NOT NULL
+ON CONFLICT (lower(email)) WHERE email IS NOT NULL
+DO UPDATE SET
+  name = EXCLUDED.name,
+  is_active = true;
 
 
 -- ============================================
@@ -162,6 +228,13 @@ CREATE POLICY "Anyone can delete wheel_assignments"
 CREATE INDEX IF NOT EXISTS idx_wheel_assignments_active ON wheel_assignments(is_active);
 CREATE INDEX IF NOT EXISTS idx_wheel_assignments_expires ON wheel_assignments(expires_at);
 CREATE INDEX IF NOT EXISTS idx_wheel_assignments_member ON wheel_assignments(member_id);
+
+-- Admin control:
+-- The website calculates the current lock period from wheel_config:
+--   last_spin_at + assignment_duration_days
+-- To restart the section from today for the next 7 days, set:
+--   assignment_duration_days = 7
+--   last_spin_at = now()
 
 
 -- ============================================

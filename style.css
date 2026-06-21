@@ -408,6 +408,64 @@ h4 {
   border-radius: 10px !important;
 }
 
+.nav-profile-item {
+  min-width: 0;
+}
+
+.nav-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  max-width: 230px;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid rgba(56, 189, 248, 0.26);
+  background: rgba(15, 23, 42, 0.62);
+  box-shadow: 0 0 18px rgba(56, 189, 248, 0.08);
+  border-radius: 10px;
+}
+
+.nav-profile-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: #031019;
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--accent-blue), #ff4fd8);
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.25);
+}
+
+.nav-profile-copy {
+  display: grid;
+  min-width: 0;
+  line-height: 1.1;
+}
+
+.nav-profile-name,
+.nav-profile-email {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-profile-name {
+  color: var(--text-white);
+  font-family: var(--font-heading);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.nav-profile-email {
+  margin-top: 0.15rem;
+  color: var(--text-gray);
+  font-size: 0.72rem;
+}
+
 .nav-toggle {
   display: none;
   background: transparent;
@@ -2132,6 +2190,29 @@ body.submit-page .project-summary-box {
     font-size: 1.25rem;
     display: block;
     padding: 0.5rem 0;
+  }
+
+  .nav-profile {
+    width: min(100%, 360px);
+    max-width: 360px;
+    margin: 0 auto;
+    justify-content: flex-start;
+    padding: 0.85rem 1rem;
+  }
+
+  .nav-profile-avatar {
+    flex-basis: 42px;
+    width: 42px;
+    height: 42px;
+    font-size: 0.95rem;
+  }
+
+  .nav-profile-name {
+    font-size: 1rem;
+  }
+
+  .nav-profile-email {
+    font-size: 0.82rem;
   }
 
   .nav-item a::after {

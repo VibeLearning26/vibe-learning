@@ -36,25 +36,94 @@ function initAuthListener() {
   }
 
   supabase.auth.getSession().then(({ data }) => {
-    if (!data?.session) window.location.replace('auth.html');
-  });
+    if (!data?.session) {
+      hideUserProfile();
+      window.location.replace('auth.html');
+      return;
+    }
 
-  if (!loginBtn) return;
+    applyAuthenticatedNavbar(supabase, loginBtn);
+    renderUserProfile(data.session.user);
+  });
 
   supabase.auth.onAuthStateChange((event, session) => {
     if (session) {
-      // User is logged in
-      loginBtn.textContent = 'Logout';
-      loginBtn.href = '#';
-      loginBtn.onclick = async (e) => {
-        e.preventDefault();
-        await supabase.auth.signOut();
-        window.location.replace('auth.html');
-      };
+      applyAuthenticatedNavbar(supabase, loginBtn);
+      renderUserProfile(session.user);
     } else {
+      hideUserProfile();
       window.location.replace('auth.html');
     }
   });
+}
+
+function applyAuthenticatedNavbar(supabase, loginBtn) {
+  if (!loginBtn) return;
+
+  loginBtn.textContent = 'Logout';
+  loginBtn.href = '#';
+  loginBtn.onclick = async (e) => {
+    e.preventDefault();
+    await supabase.auth.signOut();
+    window.location.replace('auth.html');
+  };
+}
+
+async function renderUserProfile(user) {
+  const profileItem = document.getElementById('nav-profile-item');
+  const avatar = document.getElementById('nav-profile-avatar');
+  const nameEl = document.getElementById('nav-profile-name');
+  const emailEl = document.getElementById('nav-profile-email');
+  if (!profileItem || !avatar || !nameEl || !emailEl || !user) return;
+
+  const email = user.email || '';
+  const name = await getUserDisplayName(user);
+
+  avatar.textContent = getProfileInitials(name, email);
+  nameEl.textContent = name;
+  emailEl.textContent = email || 'Signed in';
+  profileItem.hidden = false;
+}
+
+async function getUserDisplayName(user) {
+  const savedNameKey = `doubthubUserName:${user?.id || user?.email || 'current'}`;
+  const metadata = user?.user_metadata || {};
+  const metadataName = metadata.full_name || metadata.name || metadata.display_name;
+  if (metadataName) {
+    localStorage.setItem(savedNameKey, metadataName);
+    return metadataName;
+  }
+
+  const supabase = createSupabaseClient();
+  if (supabase && user?.id) {
+    const { data, error } = await supabase
+      .from('auth_profiles')
+      .select('full_name')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (!error && data?.full_name) {
+      localStorage.setItem(savedNameKey, data.full_name);
+      return data.full_name;
+    }
+  }
+
+  const savedName = localStorage.getItem(savedNameKey);
+  if (savedName) return savedName;
+
+  return user?.email?.split('@')[0] || 'User';
+}
+
+function getProfileInitials(name, email) {
+  const source = (name || email || 'User').trim();
+  const words = source.split(/\s+/).filter(Boolean);
+  if (words.length >= 2) return `${words[0][0]}${words[1][0]}`.toUpperCase();
+  return source.slice(0, 2).toUpperCase();
+}
+
+function hideUserProfile() {
+  const profileItem = document.getElementById('nav-profile-item');
+  if (profileItem) profileItem.hidden = true;
 }
 
 function initContactForm() {
